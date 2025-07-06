@@ -1,0 +1,657 @@
+import polars as pl
+import pandas as pd
+from datetime import datetime, date, time, timedelta
+pl.Config.set_tbl_cols(100)
+pl.Config.set_tbl_width_chars(1000)
+
+##5 -- st
+# df= pl.read_csv("D:/GIT_TradevisionRelatedProjects/generic/2012_Full.csv")
+
+# print(df.head()) # there is no explicit index in polars df
+
+# print(df.glimpse()) # quick method when many columns
+
+# print(df['PortfolioID','StrategyID','SignalID','EntryDatetime', 'EntryPrice']) #not efficient way
+
+# print(df.select(
+#     pl.col('PortfolioID'),
+#     pl.col('StrategyID'),
+#     pl.col('SignalID'),
+#     pl.col('EntryDatetime'),
+#     pl.col('EntryPrice'),
+#     pl.col('EntryPrice').max().alias('maxPrice'), # method chaining.
+# )) # This is expression API way, which is parallel and efficient
+
+# print(
+#     df.group_by(['PortfolioID','StrategyID', 'SignalID', 'EntryDatetime']).agg(
+#         pl.col('EntryPrice').max().alias('maxPr')
+#     )
+# )# groupby example
+
+#lazy mode
+# print("--- nothing after agg below , doesnt show how many columns needed for optimized query --\n")
+# print(pl.scan_csv("D:/GIT_TradevisionRelatedProjects/generic/2012_Full.csv").group_by(
+#     ['PortfolioID','StrategyID', 'SignalID', 'EntryDatetime']).agg(
+#     pl.col('EntryPrice').max().alias('maxPr')
+# )) #this prints only the plan without optimization, not the data
+
+# print("--- explan after agg below shows we need how many columns , optimized plan\n")
+# print(pl.scan_csv("D:/GIT_TradevisionRelatedProjects/generic/2012_Full.csv").group_by(
+#     ['PortfolioID','StrategyID', 'SignalID', 'EntryDatetime']).agg(
+#     pl.col('EntryPrice').max().alias('maxPr')
+# ).explain())
+
+# print("---describe below after agg, gives shape and statistics---\n")
+# print(pl.scan_csv("D:/GIT_TradevisionRelatedProjects/generic/2012_Full.csv").group_by(
+#     ['PortfolioID','StrategyID', 'SignalID', 'EntryDatetime']).agg(
+#     pl.col('EntryPrice').max().alias('maxPr')
+# ).describe())
+
+#streaming, used when you need to read data files larger than memory in batches.
+# print('---Streaming set to true below\n')
+# print(pl.scan_csv("D:/GIT_TradevisionRelatedProjects/generic/2012_Full.csv").group_by(
+#     ['PortfolioID','StrategyID', 'SignalID', 'EntryDatetime']).agg(
+#     pl.col('EntryPrice').max().alias('maxPr')
+# ).collect(streaming=True)) # collect converts the lazy DF to eager DF
+##5 -- ed
+
+##6-- Lazy st
+# df_eager = pl.read_csv("D:/GIT_TradevisionRelatedProjects/generic/2012_Full.csv").group_by(
+#     pl.col('PortfolioID')).agg( pl.col('EntryQty').max().alias('maxEnterQty'))
+# print(df_eager.head()) #each line is run independently and full df loaded in memory
+
+# df_lazyOptimized = pl.scan_csv("D:/GIT_TradevisionRelatedProjects/generic/2012_Full.csv").group_by(
+#     pl.col('PortfolioID')).agg( pl.col('EntryQty').max().alias('maxEnterQty')).collect()
+# print(df_lazyOptimized) # collect converts the optimizwed plan to DF
+
+# df_lazyPlan = pl.scan_csv("D:/GIT_TradevisionRelatedProjects/generic/2012_Full.csv")
+# print(df_lazyPlan) #this is a queryplan without any optimization as all columns are planned to be read
+
+# df_lazyPlan = pl.scan_csv("D:/GIT_TradevisionRelatedProjects/generic/2012_Full.csv").collect() #starts evaluation
+# print(df_lazyPlan.schema)
+# print(df_lazyPlan.collect_schema())  #same as above
+# print(df_lazyPlan.columns) # names of columns
+# print(df_lazyPlan.collect_schema().names()) # names of columns
+# print(len(df_lazyPlan.select(pl.col(df_lazyPlan.columns[0])).to_series())) # length of df
+
+# print(
+# pl.LazyFrame({'values':[1,2,3]})
+# ) # creating lazyframe from data. If we do operations on lazyframe, we transform queryplan, not data
+
+# print(
+# pl.DataFrame({'values':[1,2,3]}).lazy()
+# ) # here dataframe is turned into lazyframe.
+
+# df_eager = pl.read_csv("D:/GIT_TradevisionRelatedProjects/generic/2012_Full.csv")
+# df_lazy = pl.scan_csv("D:/GIT_TradevisionRelatedProjects/generic/2012_Full.csv")
+# df_eager=df_eager.rename({'SecID':'SI'}) # column actually changed
+# df_lazy= df_lazy.rename({'SecID':'SI'}) #only queryplan changed for rename
+# print(df_eager)
+# print(df_lazy)
+## 6-- Lazy ed
+
+##8-- st
+# #datatypes
+# df = pl.read_csv("D:/GIT_TradevisionRelatedProjects/generic/2012_Full.csv")
+# print(df.schema)
+# print(df['PortfolioID'].dtype)
+# # apache arrow ,framework that provides best way to represent tabular data in memory
+##8-- ed
+1
+##9-- st
+#DF and Series
+# df = pl.read_csv("D:/GIT_TradevisionRelatedProjects/generic/2012_Full.csv")
+# print(df['PortfolioID']) #series
+# print(df.select(pl.col('PortfolioID')).to_series())
+# s= df.select(pl.col('PortfolioID')).to_series() #use this series for dataframe creation
+# df_fromSeries = s.to_frame()
+# print(df_fromSeries) # Dataframe from a series
+
+# l= [1,2,3]
+# dict = {'col1':[1,2,3],'col2':[21,22,23] }
+# print(pl.Series('NameOfSeriesAsFirstArgument', l)) #series from list
+# print(pl.DataFrame(dict)) #df from dict
+
+# listOfList = [[1,2,3],[5,6,7]]
+# print(pl.DataFrame(data= listOfList, schema=['col1','col2'])) #df from lsit of list
+
+# dict = {'col1':[1,2,3],'col2':[21,22,23] }
+# print(pl.DataFrame(data= dict, schema= {'col1':pl.Int64, 'col2':pl.Int32}))
+# print(df.to_dicts()) # list of dictionaries
+##9-- ed
+
+##12-- st
+##filter
+# df = pl.read_csv("D:/GIT_TradevisionRelatedProjects/generic/2012_Full.csv")
+# print(df[1,:]) # second row all columns
+# print(df[:4,['PortfolioID','StrategyID']])
+# print(df[0]) # gives first row
+# print(df[range(0,10)])
+# print(df[1,3,4]) #specific rows
+##12-- ed
+
+##13 -- st
+## filter using filter and expression API
+# df = pl.read_csv("D:/GIT_TradevisionRelatedProjects/generic/2012_Full.csv")
+# print(df.filter(pl.col('SignalID')== 3979).select(['PortfolioID','StrategyID','EntryDatetime','EntryPrice']))
+# lstEP = [True if i>10500 else False for i in df['EntryPrice']]
+# print(df.filter(lstEP))
+# print(df.head())
+##13 -- ed
+
+##14 -- st
+## filtering in lazy mode
+# df = pl.scan_csv("D:/GIT_TradevisionRelatedProjects/generic/2012_Full.csv")
+# df= df.filter(pl.col('SecID')== 17878).select(pl.col(['PortfolioID','SecID']))
+# print(df)
+# print("-- explain with otimized=True below")
+# print(df.explain(optimized=True))
+# print("-- inspect below")
+# print(df.inspect())
+# print("--only explain below")
+# print(df.explain())
+# # if there are multiple conditions, then all these conditions are combined as single condition
+##14 -- st
+
+##16 -- st
+##sq bracket
+# df = pl.read_csv("D:/GIT_TradevisionRelatedProjects/generic/2012_Full.csv")
+# print(df.head())
+# print(df[:,['TradeID', 'SecID']])
+# print(df['PortfolioID'])
+# print(df[[1,2],['TradeID', 'SecID']])
+# print(df[:,:4])
+# print(df[:6,:7])
+# print(df.with_columns(pl.col("SecID").alias("SecIDNew")).select(pl.col("SecIDNew"))) #to create a new column, use with_column
+##16 -- ed
+
+##17 -- st
+## select
+# df = pl.read_csv("D:/GIT_TradevisionRelatedProjects/generic/2012_Full.csv")
+# print(df.select(
+#     pl.col('SecID')
+# ))# one column df is returned even if one column is selected in select. we can conver it series
+# select method is more efficient
+
+# print(df.select(
+#     pl.col('EntryPrice').round(2).alias('EPRounded'),
+#     pl.col('EntryPrice')
+# ))
+
+# print(pl.scan_csv("D:/GIT_TradevisionRelatedProjects/generic/2012_Full.csv").select(
+#     pl.col('EntryPrice').round(2).alias('EPRounded'),
+#     pl.col('EntryPrice')
+# ).collect()) ## select in lazy mode is efficient as polars loads only one colmn that is needed
+##17 -- ed
+
+##18 -- st
+## select multiple columns
+from polars import selectors
+# df = pl.read_csv("D:/GIT_TradevisionRelatedProjects/generic/2012_Full.csv")
+# print(df.select(
+#     pl.exclude(['TradeID']) # example of exclude
+#     # pl.all() # select all columns
+#     # "^T.*$" # regex Starts with ^ and ends with $
+#     # pl.col(pl.Int64) # all Int64 type columns selected
+#     # pl.col([pl.Int64, pl.Datetime])
+#     # selectors.matches("^T.*$") # using selectors  , here any regex will work
+#     # selectors.starts_with("P") #selector example
+#     # (selectors.starts_with('P')&(selectors.numeric())) # example multiple conditions
+#     # ~selectors.starts_with('P') # negation
+# ))
+##18 -- ed
+
+##19 -- st
+## transforming and adding a column
+# df = pl.read_csv("D:/GIT_TradevisionRelatedProjects/generic/2012_Full.csv")
+# print(df.with_columns(
+#     pl.col('ExitPrice').round(1).alias("ExitPriceRounded")
+# )) #one new column added, with_columns return all coumns of dataframe. Accepst expressions only
+
+# print(df.with_columns(
+#     (pl.col('ExitPrice') + pl.col('ExitPrice')*2).alias('NewCol'),
+# ).with_columns(
+#     (pl.col('NewCol')*2).alias('NewCol2'), #use the column created one step before and do
+#     pl.lit(1).alias('Flag')
+# )
+# )
+##19 -- st
+
+##20 -- st
+## new col with if else
+# df = pl.read_csv("D:/GIT_TradevisionRelatedProjects/generic/2012_Full.csv")
+# print(df.with_columns(
+#     [
+#         pl.col('ExitPrice'),
+#         pl.when((pl.col('ExitPrice')>10287)& (pl.col('EntryPrice')>10187)).then(1).otherwise(0).alias('Flag')
+#     ]))
+##20 -- st
+
+##21 -- st
+## sorting
+# df = pl.read_csv("D:/GIT_TradevisionRelatedProjects/generic/2012_Full.csv")
+# df= df.sort('TradeID', descending= True)
+# print(df['TradeID'].flags)
+# print(df.head(3))
+##21 -- st
+
+##22 -- st
+## sort simple
+# df = pl.read_csv("D:/GIT_TradevisionRelatedProjects/generic/2012_Full.csv")
+# df=df.rename({'SecID':'SID'}) # reassignment is necessary
+# df= df.drop(['SID'])# reassignment is necessary
+# print(df.head(2))
+##22 -- ed
+
+##23 -- st
+## iteration
+# lst = [i for i in df['TradeID'] ]
+# print(lst[:10])
+##23 -- ed
+
+#25 -- st
+## missing vals
+from polars import selectors as cs
+# df = pl.read_csv("D:/GIT_TradevisionRelatedProjects/generic/2012_Full.csv")
+# print(df.null_count()) # gives number of nulls in each column of datafram
+# print(df.select(
+#     pl.col('SignalID'),
+#     pl.col('OrgTradeID').alias('OrgTradeID1'),
+#     pl.col('OrgTradeID').is_null() # gives True/False on rows where null
+# ).filter(pl.col('OrgTradeID1').is_not_null())) #Apply filter to get only null or not null
+
+# print(df.select(
+#     pl.col('SignalID'),
+#     pl.col('SignalID').is_null().alias('SigID_nullOrNot')
+# ))
+
+# print(df.select(
+#     pl.any_horizontal(pl.all().is_null()).unique().alias("any"), # chk in all col if null, anywhere(atleast1)
+#     pl.all_horizontal(pl.all().is_null()).unique().alias("all") # chk in all col if null, all
+# ))
+
+# print(df.drop_nulls()) # drops rows where there is at least 1 null
+# print(df.drop_nulls( subset= ['StrategyID', 'SignalID']))
+#25 -- ed
+
+##26 -- st
+## replace missing vals
+# df = pl.read_csv("D:/GIT_TradevisionRelatedProjects/generic/2012_Full.csv")
+# print(df.head())
+#
+# lst = [[1,None,2,3,None,4,4],[2,None,2,3,4,5,None]]
+# df = pl.DataFrame(data=lst, schema={'col1':pl.Int64, 'col2':pl.Int64}, strict= False)
+# print(df)
+# print(df.with_columns(
+#     pl.all().fill_null(0)))
+# print(df.select(
+#     pl.col(c).fill_null(0).alias(f"{c}_filled") for c in df.columns
+# ))
+
+# print( df.select(
+# pl.col(c).fill_null(0).alias(f"{c}_filled") for c in df.columns)
+# )
+
+# print( df.select(
+# pl.col(c).fill_null(strategy= 'forward').alias(f"{c}_filled") for c in df.columns)
+# ) # previous not null value is used
+
+# print( df.with_columns(
+# pl.col(c).fill_null(strategy= 'forward').alias(f"{c}_filled") for c in df.columns)
+# ) # previous not null value is used
+
+# print( df.with_columns(
+# pl.col(c).fill_null(pl.col('col1').mean()).alias(f"{c}_filled") for c in df.columns)
+# ) # fill using expression
+
+##26 -- ed
+
+##29 -- st
+## categorical
+# df = pl.read_csv("D:/GIT_TradevisionRelatedProjects/generic/2012_Full.csv")
+# print(df.with_columns(
+#     pl.col('PortfolioID').cast(pl.String).cast(pl.Categorical()).alias('PortfolioID_Cat')
+# ))
+##29 -- st
+
+##35 -- st
+## stats
+df = pl.read_csv("D:/GIT_TradevisionRelatedProjects/generic/2012_Full.csv")
+# print(df.mean())
+# print(df.describe(percentiles=(.1,.2,.7,.9))) # different percentiles
+print(df.with_columns(
+    rollingMeanEQ= pl.col('EntryQty').rolling_mean(5), # example of first var and then expression
+    ewm1 = pl.col('EntryQty').ewm_mean(span=2), # example of first var and then expression
+))
+
+# print(df.with_columns(
+#     pl.col(c).ewm_mean(span=2).name.suffix('_s') for c in df.columns # example of suffix
+# ))
+
+# print(df.select(
+#     pl.col('EntryDatetime').str.strptime(pl.Datetime, format='%Y-%m-%d %H:%M:%S%.f').max().alias('MinEntryDatetime'),
+#     pl.col('EntryDatetime').str.strptime(pl.Datetime, format='%Y-%m-%d %H:%M:%S%.f').min().alias('MaxEntryDatetime')
+# )) # datetime format for reference only...
+
+
+# print(df.select(pl.col('EntryPrice').mean().alias("meanEP")))  # here one value df is returned
+# print(df.select(pl.col('EntryPrice').mean().alias("meanEP"))[0,0] * 2) # extract one value of df and math operation
+# print(df.select(pl.all())[0,8]) # one single value of row 0 and 8th col
+
+# print(df.head())
+
+# print(df.select(
+#     pl.col('EntryPrice'),
+#     pl.col('EntryPrice').rolling_min(window_size=4, ).alias("RollEP"),
+#     pl.col('EntryPrice').rolling_min(window_size=4, min_periods=2).alias("RollEPMin1"),
+#     pl.col('EntryPrice').rolling_min(window_size=4, min_periods=2, center= True).alias("RollEPMin1Center"),
+# )) # example of stats on columns.. rolling is powerful .. need to see other rolling options.
+
+#horizontal
+# df_h = df.select(pl.col(['EntryPrice','ExitPrice']))
+# print(df_h.select( df_h.max_horizontal().alias('maxH'),
+#                    df_h.min_horizontal().alias('minH'),
+#                    df_h.sum_horizontal().alias('sumH'),
+#                    pl.col('EntryPrice'),
+#                    pl.col('ExitPrice')
+#                    )) # horizontal example
+
+# print(df_h.select(
+#     pl.col(['EntryPrice','ExitPrice']),
+#     pl.cum_sum_horizontal(pl.all())
+# )[0,2]['EntryPrice']) # example of dict
+
+# print(df_h.with_columns(
+#     pl.concat_list( pl.all().alias('lst'))
+# )[0,2].sum())  # example of taking columns in to a list of elements
+##35 -- ed
+
+##36 -- st
+## value count
+# df = pl.read_csv("D:/GIT_TradevisionRelatedProjects/generic/2012_Full.csv")
+# print(df['PortfolioID'].value_counts(sort= True)) # count of values in column, here sort is on value
+# print(df['PortfolioID'].unique().len()) # unique values in a column
+# print(df['PortfolioID'].value_counts().sort('PortfolioID')) # sort by column
+# print(df['PortfolioID'].value_counts())
+
+# print(df.select(
+#     pl.col('PortfolioID').value_counts()
+# )[0,0]['PortfolioID'])  # struct method... run by removing [0,0]['PortfolioID']
+##36 -- ed
+
+##37 -- st
+## groupby
+# df = pl.read_csv("D:/GIT_TradevisionRelatedProjects/generic/2012_Full.csv")
+# print(df.head(2))
+
+# print(df.group_by('PortfolioID').agg(
+#     pl.col('EntryPrice').count().alias('EnP_cnt') # example of a groupby and aggregation fn
+# ).sort( by='EnP_cnt' ,descending= True)) # addind sort will give same result order, else different
+
+# print(df.group_by('PortfolioID').agg(
+#     pl.col('EntryPrice')# example of extrating a full column as list ! very handly for aggregation
+# ).sort( by='EntryPrice' ,descending= True)) # addind sort will give same result order, else different
+
+
+# print(df.group_by(['PortfolioID', 'StrategyID']).agg(  # multiple column groupby
+#     pl.col('EntryPrice')# example of extrating a full column as list ! very handly for aggregation
+# ).sort( by='EntryPrice' ,descending= True)) # addind sort will give same result order, else different
+
+# print(df.group_by(
+#     EnterDatetimeDT = pl.col('EntryDatetime').str.strptime(pl.Datetime, format='%Y-%m-%d %H:%M:%S%.f')).agg(
+#     pl.col('EntryPrice').count().alias('TmCnt')
+# ).sort(by='TmCnt', descending= True) # group by with expression to change column before groupping and dateformat
+# )
+
+
+# print(df.group_by(
+#     pl.col('EntryDatetime').str.strptime(pl.Datetime, format='%Y-%m-%d %H:%M:%S%.f').alias('EnterDatetimeDT')).agg(
+#     pl.col('EntryPrice').count().alias('TmCnt')
+# ).sort(by='TmCnt', descending= True) # new name of column via alias
+# )
+
+# print(df.group_by(
+#     pl.col('EntryDatetime').str.strptime(pl.Datetime, format='%Y-%m-%d %H:%M:%S%.f').alias('EnterDatetimeDT')
+#     ,maintain_order=True).agg(
+#     pl.col('EntryPrice').count().alias('TmCnt')
+# ) # maintain order used to use order in which data appears in df
+# )
+
+# pl.Config.set_verbose() #needed for fast path
+# pl.config.Config() #needed for fast path
+# print(df.sort('PortfolioID').group_by(['PortfolioID']).agg(
+#     pl.col('EntryPrice').mean()
+# )) # fast path example as sorting is done first
+##37 -- ed
+
+##38 --st
+## groupby iteration
+# df = pl.read_csv("D:/GIT_TradevisionRelatedProjects/generic/2012_Full.csv")
+# print(df.head(2))
+
+# for i,j in df.group_by('PortfolioID'):
+#     print(i)
+#     print(j) # example of creating multiple dfs based on groups !!!!
+
+# for i,j in df.group_by(['PortfolioID','StrategyID']):
+#     print(i)
+#     print(j) # example of creating multiple dfs based on groups !!!!  Two column groupping
+
+# print(df.group_by(['PortfolioID','StrategyID']).head(2)) # single df with 2 rows from each combination
+# print(
+#     df.group_by('PortfolioID').agg(
+#         pl.col('PortfolioID').count().alias('Pcnt'),
+#     ).sort(by= 'Pcnt', descending= True)
+# )
+
+#multiple aggregations on same column
+# group_column = 'PortfolioID'
+# print(df.group_by(group_column).agg(
+#     pl.col('EntryPrice').max().name.suffix("_max"),
+#     pl.col('EntryPrice').min().name.suffix("_min"),
+# ))
+
+
+## user defined functions on groups
+# print(
+#     df.group_by('PortfolioID').map_groups(
+#         # lambda d: d.max() # example of max function applied to all sub dfs
+#         lambda d: d.select(pl.col(pl.Int64).head(2)) # example of select applied to all sub dfs and get 2 rows
+#     )
+# )
+##38 --ed
+
+##42 -- st
+## df concat
+# df = pl.read_csv("D:/GIT_TradevisionRelatedProjects/generic/2012_Full.csv")
+# df_200= df.filter(pl.col('PortfolioID')<=120)
+# df_more200 = df.filter(pl.col('PortfolioID')>120)
+# print(df_200['PortfolioID'].len())
+# print(df_more200['PortfolioID'].len())
+# concat vertically
+#case 1 .. two DFs are in memory and concatinated DF only references these.. no new data is created
+#case 2 .. two DFs are in memory and concatinated DF is a new copy and does not refer to original DFs
+#case 3 .. the data from second DF is copied into data of DF1(which is in memory) and a new DF is craeted
+
+
+# print(
+# df_200.vstack(df_more200)
+# )#case1 . Very cheap and done in milisecond, but groupby oderby will be slower
+
+# print(
+#     df_200.vstack(df_more200).rechunk()
+# ) #case2
+
+# print(
+#     df_200.extend(df_more200)
+# ) #case3
+
+# # pl.concat takes a list of dfs and first vstack and then rechunks
+# print(
+#     pl.concat([df_200, df_more200])
+# )
+
+# pl_concatenated = pl.concat([df_200, df_more200]) # conact example with default rechunk
+# pl_concatenated = pl.concat([df_200, df_more200], rechunk= False) # conact example without rechunk, only vstack
+
+# print(pl.concat([df_200, df_more200], how= 'vertical_relaxed')) #cols with different dtypes, use vertical_relaxed
+
+# print(
+#     pl.concat([df_200, df_more200], how= 'diagonal')
+# )
+##42 -- ed
+
+##44 -- st
+## join
+# df = pl.read_csv("D:/GIT_TradevisionRelatedProjects/generic/2012_Full.csv")
+# df_left= df.filter(pl.col('PortfolioID')<=120)
+# df_right= df.filter(pl.col('PortfolioID')>120)
+
+# print(
+#     df_left.join(df_right,on= 'StrategyID', how= 'inner')
+# )
+
+# print(
+#     df_left.lazy().join(
+#         df_right.lazy(),
+#         on= 'StrategyID', how= 'inner'
+#     ).select('PortfolioID', 'StrategyID').collect()
+# ) # join in lazy mode
+##44 -- ed
+
+##  -- pickle and redis --st
+# import redis
+# import pickle
+# r= redis.Redis()
+# df_name = pickle.dumps(df_pl_sec)
+# r.set(f"df_name{i}", df_name)
+# print(i)
+# print(pickle.loads(r.get(f"df_name{i}")).head())
+##  -- pickle and redis --end
+
+
+# #8 timeseries
+# #8.1 preliminaries
+# from datetime import datetime, date, time, timedelta # python datetime is used in polars
+# import polars as pl
+# dt = datetime(2024,12,30,8,49,50)
+# print(dt, type(dt), dt.year, dt.second, dt.minute,"---" , dt.min ,"---" ,dt.min+ timedelta(minutes=2),"---" ,datetime.now(), "---" , dt+ timedelta(minutes=2))
+# print(dt.timestamp(), (dt+ timedelta(seconds=2)).timestamp())
+# print( datetime.fromtimestamp(datetime(2024,12,30,8,49,50).timestamp()) )  # from timestamp. here first timestamp is generated and then fromtimestamp is used
+# print(dt.strftime("%Y-%m-%d %H:%M:%S"), dt.strftime("%I:%M:%S %p")) # search fpr various formats supported by strftime to know other formats
+#
+# date_strg = "2023-01-01 12:00:00"
+# print(datetime.strptime(date_strg,"%Y-%m-%d %H:%M:%S" )) #string to date
+# date_strg = "2023-01-01"
+# print(datetime.strptime(date_strg,"%Y-%m-%d" )) #string to date
+#
+# date1 = date(2023,1,1)
+# print(date1, date.today()," -- ", date1.strftime("%Y-%m-%d"))
+# print(datetime.strptime(date_strg,"%Y-%m-%d"), type(datetime.strptime(date_strg,"%Y-%m-%d")))
+# print(datetime.strptime(date_strg,"%Y-%m-%d").date(), type(datetime.strptime(date_strg,"%Y-%m-%d").date()))
+# print(datetime(2024,12,30,8,49,50).timestamp())
+#
+#
+# #Time
+# t1 = time(22,20,35)
+# print(t1, t1.hour, t1.minute, t1.second, "--", t1.strftime("%a %B %H:%M:%S")) # check various formats take by the function strftime
+# t1_str = datetime.strptime("14:30:00", "%H:%M:%S" ).time() # if time is not used, then 1900/01/01 is taken as date
+# datediff= datetime(2024,12,30,9,49,55) - datetime(2022,12,30,8,49,50)
+# print(datediff, " ## ", datediff.days, int((datediff.seconds)/(60*60)),  (datediff.seconds)/(1) - 60* int((datediff.seconds)/(60*60))  ) #
+# print(datediff.__str__().split(":")) # use this to get different time components from datetime difference
+# #timerange
+# print(pl.datetime_range(start= datetime( 2022,12,30,8,49,50) , end=datetime(2022,12,30,9,49,50), interval= timedelta(seconds=5), eager=True))
+# dt_Jan_1_2 = pl.datetime_range(start= datetime(2025,1,1, 9, 15,0), end=datetime(2025,1,2, 9, 15,0), interval=timedelta(hours=3), eager=True)
+# print(dt_Jan_1_2)
+
+# df_dt = pl.DataFrame({
+#     "Date1": pl.datetime_range(start= datetime(2025,1,1, 9, 15,0), end=datetime(2025,1,2, 9, 15,0), interval=timedelta(hours=2, minutes=30), eager=True)
+# })
+# print(df_dt.head())
+# #--------------- Datetime refresh ---------------------------------------
+# from datetime import datetime, date, timedelta, time
+# dt_tm1= datetime(2025,1,1,9,15,30)
+# print(dt_tm1, type(dt_tm1), dt_tm1.year, dt_tm1.second, dt_tm1+timedelta(minutes=2))
+# dt_tm_str = '2025-01-01 09:17:30'
+# dt_tm2 = datetime.strptime(dt_tm_str, '%Y-%m-%d %H:%M:%S')
+# print(dt_tm2, type(dt_tm2), dt_tm2.year, dt_tm2.second, dt_tm2+timedelta(minutes=2))
+# print( dt_tm2.timestamp() , dt_tm2.timestamp() + 2, datetime.fromtimestamp(dt_tm2.timestamp() + 2))
+# dt_str = '2025-01-01'
+# print(datetime.strptime(dt_str, '%Y-%m-%d').date() + timedelta(days=2))
+# tm_str= '09:17:30'
+# tm2= datetime.strptime(tm_str,'%H:%M:%S' ) + timedelta(seconds=6)
+# print(tm2.time())
+# print(datetime.now())
+# df = pl.DataFrame({
+#     'datecol': pl.datetime_range(
+#         start=  datetime(2000,1,1,9,15,30), end= datetime(2025,1,1,15,30,00), interval='1s', eager=True),
+#     'datecol2': pl.datetime_range(
+#         start=  datetime(2000,1,2,9,15,30), end= datetime(2025,1,2,15,30,00), interval='1s', eager=True),
+# })
+# print(datetime.now())
+# print(df.head())
+# date_diff = datetime(2001,1,1,9,15,30) - datetime(2000,1,1,9,15,30)
+# print(date_diff.__str__().split(":"), int( date_diff.__str__().split(":")[2]) )
+# #--------------- Datetime refresh ---------------------------------------
+
+# --1.1 ----
+# from datetime import datetime, time, date
+# import polars as pl
+# import pandas as pd
+# start_dt = date(2015, 12, 1)
+# end_dt = date(2016, 12, 31)
+# df = pl.DataFrame({
+#     'datetime': pl.datetime_range(start= start_dt, end= end_dt, interval= '1h', eager=True)
+# }).with_columns(
+#     pl.col('datetime').cast(pl.Date).alias('date'),
+#     pl.col('datetime').cast(pl.Time).alias('time'),
+# )
+# print(df.head())
+# df= df.with_columns(
+#     pl.col('datetime').diff().alias("diff")
+# )
+# print(df.head())
+# df_phy =df.select(
+#     pl.col('datetime').to_physical().name.suffix("_us"),
+#     pl.col('diff').to_physical().name.suffix("_days")
+# )
+# print(df_phy.head())
+#
+# df_pd = pd.DataFrame({
+#     'datetime': pd.date_range(start_dt, end_dt, freq= '6h')
+# })
+# print(df_pd.dtypes)
+#
+# df_plFrompd = pl.from_pandas(df_pd)
+# print(df_plFrompd.head())
+# # --1.1 ----
+#
+# df = pl.DataFrame(
+#     {
+#         "id":["A","B"],
+#         "start": [datetime(2022, 1, 1), datetime(2022, 1, 2)],
+#         "end": datetime(2022, 1, 19),
+#     }
+# )
+# print(df)
+
+#
+#
+# #  -- pickle and redis --st
+# import redis
+# import pickle
+# r= redis.Redis()
+#
+# keys =r.scan_iter("*")
+# for i in keys:
+#     print(i)
+#
+# df = pl.read_csv("D:/GIT_TradevisionRelatedProjects/generic/2023_NovDec.csv")
+# print(df.head())
+#
+# df_name = pickle.dumps(df)
+# r.set("df_name", df_name)
+# print(pickle.loads(r.get("df_name")).head())
+# # print(i)
+#
+# #  -- pickle and redis --end
