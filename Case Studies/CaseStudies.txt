@@ -1,0 +1,2 @@
+1) Understanding underlying data pattern
+2) Forecasting TimeSeries
