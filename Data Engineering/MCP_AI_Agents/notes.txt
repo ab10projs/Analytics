@@ -1,0 +1,37 @@
+1------------- MCP basics  (Model context Protocol)--------------------------1
+-- Anthrop\c this the company that introduced this MCP concept
+-- It is only useful if many people use MCP
+-- LLM an only generate text, summarize text, generate code, translate text etc... LLM calls tools for specific tasks that LLM can not do (like API to generate image, . 
+-- most of the time LLM makes http request to other tools for specilized tasks.
+-- LLM can call other LLMs
+-- With MPC we can combile tools with LLMs
+-- MCP is just like USB port, as USB prot can allow connection of other hardware to PC 
+-- LLM <---MCP--> {Tools, LLMs, prompts} 
+
+-- With MCP, there is always a host (e.g. Claude/Cursor/Lovable/Winsurf). This host needs to have a client, which is automatically included in this host. This client can communicate with APIs, resources and prompt templates. MCP server is the layer of abstraction between client and resources/prompts etc. So MCP connects with APIs, Resources and prompt templates.
+-- LLM AI app can talk to different tools via MCP 
+-- MCPs and APIs have lot of similarities 
+	similarties
+		-- both client server Model
+		-- Abstraction
+		-- Simplify integration
+	differences
+		-- purpose build vs general purpose
+		-- Dynamic Self discovery
+		-- Standardization of Interface
+
+-- MCP is just like a WRAPPER around API
+
+1------------- MCP basics  (Model context Protocol)--------------------------1
+
+2---------------- -----------------------2
+-- node.js on local machine , because most of the servers work with npx command and npx command runs via node.js
+-- install nvm to upgrade or downgrade versions 
+-- claude desktop , as this is the first host. 
+-- vs code, as with vscode we can edit claude config files
+-- UV, python , pyenv virtual env
+2---------------- -----------------------2
+
+3------------------Downloads----------------------3
+-- 
+3------------------Downloads----------------------3
