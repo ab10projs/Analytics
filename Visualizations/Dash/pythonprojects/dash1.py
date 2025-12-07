@@ -33,18 +33,47 @@ pd.set_option('display.max_columns', 50)
 ######################### import and setup section end     ############################################################################################################### 1
 
 path= "C:/GIT_Repo_Analytics/Analytics/Visualizations/Dash/data/"
-df = pl.read_csv(f"{path}ConcreteCompressiveStrength.csv")
+df = pl.read_csv(f"{path}ecommerce_customer_behavior_dataset.csv")
+dfProductCat = df.select(pl.col(['Product_Category','Total_Amount'])).group_by(pl.col('Product_Category')).agg(pl.col('Total_Amount').sum().alias('Total_Amount'))
 print(df.head(1))
+print(dfProductCat)
+lstProductCat = dfProductCat['Product_Category']
+lstTotalAmtByProd =  dfProductCat['Total_Amount']
 
 
-fig1 = go.Figure()
+fig1 = go.Figure(
+    data=[
+        go.Pie(
+            labels=lstProductCat,
+            values=lstTotalAmtByProd,
+            hole=0  # Set to 0 for pie chart, >0 for donut chart
+        )
+    ]
+)
 fig1.update_layout(
     margin=dict(l=5, r=5, t=5, b=5),   # reduces whitespace
+    showlegend=False
+)
+
+fig2 = go.Figure(
+    data=[
+        go.Bar(
+            x=lstProductCat,
+            y=lstTotalAmtByProd,
+        )
+    ]
+)
+fig2.update_layout(
+    margin=dict(l=5, r=5, t=5, b=5),   # reduces whitespace
+    showlegend=False
 )
 
 
 
 app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
+
+
+
 
 app.layout = html.Div([
  dbc.Row([
@@ -55,16 +84,16 @@ app.layout = html.Div([
                    dcc.Dropdown(style={"marginBottom": "4px"}),
                    dcc.Dropdown(style={"marginBottom": "4px"}),
                    dcc.Dropdown(style={"marginBottom": "40px"}),
-                   dbc.Col(dcc.Graph(id='gp7', figure=fig1, style={"height": "300px"}, config={"displayModeBar": False})),
+                   dbc.Col(dcc.Graph(id='gp7', figure=fig1, style={"height": "250px"}, config={"displayModeBar": False})),
 
            ], width= 2, className="ms-5" ),
   dbc.Col([html.Div([
                                 dbc.Row(
                                     [
                                         dbc.Col(dcc.Graph(id='gp1', figure=fig1, style={"height": "250px"}, config={"displayModeBar": False})),
-                                        dbc.Col(dcc.Graph(id='gp2', figure=fig1, style={"height": "250px"}, config={"displayModeBar": False})),
+                                        dbc.Col(dcc.Graph(id='gp2', figure=fig2, style={"height": "250px"}, config={"displayModeBar": False})),
                                         dbc.Col(dcc.Graph(id='gp3', figure=fig1, style={"height": "250px"}, config={"displayModeBar": False})),
-                                        dbc.Col(dcc.Graph(id='gp4', figure=fig1, style={"height": "250px"}, config={"displayModeBar": False})),
+
                                     ],
                                     className="gx-1"   # <— reduces horizontal space between graphs
                                 ),
@@ -72,7 +101,7 @@ app.layout = html.Div([
                         ]),
                       dbc.Row(
                           [
-                              dbc.Col(dcc.Graph(id='gp5', figure=fig1, style={"height": "250px"}, config={"displayModeBar": False})),
+                              dbc.Col(dcc.Graph(id='gp5', figure=fig2, style={"height": "250px"}, config={"displayModeBar": False})),
                               dbc.Col(dcc.Graph(id='gp6', figure=fig1, style={"height": "250px"}, config={"displayModeBar": False})),
                           ],
                           className="gx-1",  # <— reduces horizontal space between graphs
