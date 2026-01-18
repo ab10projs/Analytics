@@ -36,9 +36,17 @@ path= "C:/GIT_Repo_Analytics/Analytics/Visualizations/Dash/data/"
 df = pl.read_csv(f"{path}ecommerce_customer_behavior_dataset.csv")
 dfProductCat = df.select(pl.col(['Product_Category','Total_Amount'])).group_by(pl.col('Product_Category')).agg(pl.col('Total_Amount').sum().alias('Total_Amount'))
 print(df.head(1))
+
 print(dfProductCat)
+
 lstProductCat = dfProductCat['Product_Category']
 lstTotalAmtByProd =  dfProductCat['Total_Amount']
+lstGender = df.select(pl.col('Gender').unique())
+lstCity = df.select(pl.col('City').unique())
+lstProduct_Category= df.select(pl.col('Product_Category').unique())
+lstPayment_Method= df.select(pl.col('Payment_Method').unique())
+lstDevice_Type= df.select(pl.col('Device_Type').unique())
+
 
 
 fig1 = go.Figure(
