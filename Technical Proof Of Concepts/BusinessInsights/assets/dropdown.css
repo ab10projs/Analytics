@@ -1,0 +1,30 @@
+/* Closed dropdown */
+.Select-control {
+    background: white !important;
+    border: 1px solid #ced4da !important;
+}
+
+/* Selected value */
+.Select-value-label {
+    color: black !important;
+}
+
+/* Input text */
+.Select-input > input {
+    color: black !important;
+}
+
+/* Menu */
+.Select-menu-outer {
+    background: white !important;
+}
+
+/* Options */
+.Select-option {
+    background: white !important;
+    color: black !important;
+}
+
+.Select-option.is-focused {
+    background: #f8f9fa !important;
+}

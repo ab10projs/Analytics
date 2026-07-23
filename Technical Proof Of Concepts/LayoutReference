@@ -1,0 +1,1055 @@
+####################  Dynamic  ####################################################################################################################### 5
+
+from dash import Dash, html, dcc, Input, Output, State
+import dash_bootstrap_components as dbc
+
+
+inputPath = "E:/inputFiles/"
+# inputPath = "/home/azureanupam/inputData/"
+outputPath = "E:/outputFiles/"
+# outputPath = "/home/azureanupam/outputData/"
+
+app = Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
+server = app.server  # this is for Ubuntu
+# Set your own title (example: "My App")
+app.title = " "   # a single space prevents browser from falling back to "Dash"
+
+# Override Dash’s default HTML template
+app.index_string = '''
+<!DOCTYPE html>
+<html>
+    <head>
+        {%metas%}
+        <title> </title>   <!-- force empty title -->
+        {%css%}
+        <link rel="icon" href="data:;base64,iVBORw0KGgo="> <!-- blank favicon -->
+    </head>
+    <body>
+        {%app_entry%}
+        <footer>
+            {%config%}
+            {%scripts%}
+            {%renderer%}
+        </footer>
+    </body>
+</html>
+'''
+
+# app.server.dfMerged = pl.scan_parquet(f'{inputPath}dfMerged_aug_25.parquet')
+# dfMerged = pl.read_parquet(f'{inputPath}dfMerged_aug_25.parquet')
+# month_year = dfMerged['ExitDateTime'].dt.strftime("%B %Y").item(0)
+
+def updatePies(dfMerged):
+    # mcxList = ['ALUMINIUM', 'SILVERM', 'ALUMINI', 'ZINCMINI', 'NICKEL', 'LEADMINI', 'GOLD', 'COPPER', 'LEAD',
+    #            'NATURALGAS', 'GOLDM', 'ZINC', 'CRUDEOIL', 'SILVER', 'COTTON']
+    # dfMerged = dfMerged.filter(~pl.col('SCRIP_NAME').is_in(mcxList))
+    # --------------------------------------------------------------------------#
+    dfGpPortfolio = dfMerged.select(['PortfolioName', 'plActualWtCost', 'exposure'])
+    dfGpPortfolio = dfGpPortfolio.group_by(['PortfolioName']).agg(
+        [pl.col('plActualWtCost').sum(), pl.col('exposure').sum()])
+    # --------------------------------------------------------------------------#
+
+    # --------------------------------------------------------------------------#
+    dfGpPortfolioProfit = dfGpPortfolio.filter(pl.col('plActualWtCost') > 0)
+    dfGpPortfolioProfit = dfGpPortfolioProfit.to_pandas()
+    totaldfGpPortfolioProfit = dfGpPortfolioProfit['plActualWtCost'].sum()
+    dfGpPortfolioProfit['plPercent'] = (dfGpPortfolioProfit['plActualWtCost'] / totaldfGpPortfolioProfit) * 100.0
+    dfGpPortfolioProfit = dfGpPortfolioProfit.sort_values(by='plPercent', ascending=False)
+    dfGpPortfolioProfit = dfGpPortfolioProfit.head(10)
+    print("--dfGpPortfolioProfit--")
+    print(dfGpPortfolioProfit.head(15))
+    # --------------------------------------------------------------------------#
+
+    # --------------------------------------------------------------------------#
+    dfGpPortfolioLoss = dfGpPortfolio.filter(pl.col('plActualWtCost') <= 0)
+    dfGpPortfolioLoss = dfGpPortfolioLoss.to_pandas()
+    totaldfGpPortfolioLoss = dfGpPortfolioLoss['plActualWtCost'].sum()
+    dfGpPortfolioLoss['plPercent'] = (dfGpPortfolioLoss['plActualWtCost'] / totaldfGpPortfolioLoss) * 100.0
+    dfGpPortfolioLoss = dfGpPortfolioLoss.sort_values(by='plPercent', ascending=False)
+    dfGpPortfolioLoss = dfGpPortfolioLoss.head(10)
+    print("--dfGpPortfolioLoss--")
+    print(dfGpPortfolioLoss.head(15))
+    # --------------------------------------------------------------------------#
+
+    # --------------------------------------------------------------------------#
+    dfGpAnalyst = dfMerged.select(['AnalystGroupGp', 'plActualWtCost', 'exposure'])
+    dfGpAnalyst = dfGpAnalyst.group_by(['AnalystGroupGp']).agg([pl.col('plActualWtCost').sum(), pl.col('exposure').sum()])
+    # dfGpAnalyst.write_csv("E:/Tradeoutput_fromDatabaseParquet/csv/GpAnalsystDelte.csv")
+    # --------------------------------------------------------------------------#
+    # --------------------------------------------------------------------------#
+    dfGpAnalystProfit = dfGpAnalyst.filter(pl.col('plActualWtCost') > 0)
+    dfGpAnalystProfit = dfGpAnalystProfit.to_pandas()
+    totaldfGpAnalystProfit = dfGpAnalystProfit['plActualWtCost'].sum()
+    dfGpAnalystProfit['plPercent'] = (dfGpAnalystProfit['plActualWtCost'] / totaldfGpAnalystProfit) * 100.0
+    dfGpAnalystProfit = dfGpAnalystProfit.sort_values(by='plPercent', ascending=False)
+    dfGpAnalystProfit = dfGpAnalystProfit.head(10)
+    print("--dfGpPortfolioProfit--")
+    print(dfGpPortfolioProfit.head(10))
+    # --------------------------------------------------------------------------#
+    # --------------------------------------------------------------------------#
+    dfGpAnalystLoss = dfGpAnalyst.filter(pl.col('plActualWtCost') <= 0)
+    dfGpAnalystLoss = dfGpAnalystLoss.to_pandas()
+    totaldfGpAnalystLoss = dfGpAnalystLoss['plActualWtCost'].sum()
+    dfGpAnalystLoss['plPercent'] = (dfGpAnalystLoss['plActualWtCost'] / totaldfGpAnalystLoss) * 100.0
+    dfGpAnalystLoss = dfGpAnalystLoss.sort_values(by='plPercent', ascending=False)
+    dfGpAnalystLoss = dfGpAnalystLoss.head(10)
+    print("--dfGpPortfolioProfit--")
+    print(dfGpPortfolioProfit.head(10))
+    # --------------------------------------------------------------------------#
+
+    PL = go.Figure(
+        data=[go.Pie(labels=['Profit', 'Loss'], values=[totaldfGpPortfolioProfit, abs(totaldfGpPortfolioLoss)],
+                     textinfo="value", textposition="inside", insidetextorientation="radial",
+                     marker=dict(colors=['green', 'red']))],
+        layout=go.Layout(
+            title=dict(
+                text="Profit Loss",
+                font=dict(size=18),
+                x=0.5,  # center
+                xanchor="center",
+                y=1,  # push title down a bit
+                yanchor="top",
+
+            ),
+            margin=dict(t=35, b=10, l=10, r=10),
+            showlegend=False,
+            width=200,  # figure width
+            height=200  # figure height
+        )
+    )
+
+    TopPftPF = go.Figure(
+        data=[go.Pie(labels=dfGpPortfolioProfit['PortfolioName'], values=round(dfGpPortfolioProfit['plActualWtCost']),
+                     textinfo="value", textposition="inside", insidetextorientation="radial",
+                     marker=dict(colors=colorsGreen))],
+        layout=go.Layout(
+            title=dict(
+                text="Top Profit Portfolios",
+                font=dict(size=18),
+                x=0.5,  # center
+                xanchor="center",
+                y=1,  # push title down a bit
+                yanchor="top",
+            ),
+            margin=dict(t=35, b=10, l=10, r=10),
+            showlegend=False,
+            width=200,  # figure width
+            height=200  # figure height
+        )
+    )
+
+    TopLosPF = go.Figure(
+        data=[go.Pie(labels=dfGpPortfolioLoss['PortfolioName'], values=round(abs(dfGpPortfolioLoss['plActualWtCost'])),
+                     textinfo="value", textposition="inside", insidetextorientation="radial",
+                     marker=dict(colors=colorsRed))],
+        layout=go.Layout(
+            title=dict(
+                text="Top Loss Portfolios",
+                font=dict(size=18),
+                x=0.5,  # center
+                xanchor="center",
+                y=1,  # push title down a bit
+                yanchor="top",
+
+            ),
+            margin=dict(t=35, b=10, l=10, r=10),
+            showlegend=False,
+            width=200,  # figure width
+            height=200  # figure height
+        )
+    )
+
+    TopPftAnl = go.Figure(
+        data=[go.Pie(labels=dfGpAnalystProfit['AnalystGroupGp'], values=round(dfGpAnalystProfit['plActualWtCost']),
+                     textinfo="value", textposition="inside", insidetextorientation="radial",
+                     marker=dict(colors=colorsGreen))],
+        layout=go.Layout(
+            title=dict(
+                text="Top Profit Anlyst Gp",
+                font=dict(size=18),
+                x=0.5,  # center
+                xanchor="center",
+                y=1,  # push title down a bit
+                yanchor="top",
+
+            ),
+            margin=dict(t=35, b=10, l=10, r=10),
+            showlegend=False,
+            width=200,  # figure width
+            height=200  # figure height
+        )
+    )
+    TopLosAnl = go.Figure(
+        data=[go.Pie(labels=dfGpAnalystLoss['AnalystGroupGp'], values=round(abs(dfGpAnalystLoss['plActualWtCost'])),
+                     textinfo="value", textposition="inside", insidetextorientation="radial",
+                     marker=dict(colors=colorsRed))],
+        layout=go.Layout(
+            title=dict(
+                text="Top Loss Anlyst Gp",
+                font=dict(size=18),
+                x=0.5,  # center
+                xanchor="center",
+                y=1,  # push title down a bit
+                yanchor="top",
+
+            ),
+            margin=dict(t=35, b=10, l=10, r=10),
+            showlegend=False,
+            width=200,  # figure width
+            height=200  # figure height
+        )
+    )
+    return PL, TopPftPF, TopLosPF, TopPftAnl, TopLosAnl
+
+
+
+
+figHistAnalyst = go.Figure()
+figHistPflio = go.Figure()
+scatter3dAnlstPortSig = go.Figure()
+scatter3dSigid = go.Figure()
+
+figSigDay = go.Figure()
+
+# PL, TopPftPF, TopLosPF, TopPftAnl, TopLosAnl= updatePies(dfMerged)
+
+PL = go.Figure()
+TopPftPF = go.Figure()
+TopLosPF = go.Figure()
+TopPftAnl = go.Figure()
+TopLosAnl = go.Figure()
+
+dfMerged = pl.read_parquet(f'{inputPath}dfMerged_aug_25.parquet')
+month_year =''
+month_year_list = ['jan_25','feb_25','mar_25','apr_25','may_25','jun_25','jul_25', 'aug_25']
+
+app.layout = html.Div([
+
+    dbc.Row([html.H2("Actionable Insights Analytics Dashboard",className="text-center" )]),
+    dcc.Dropdown(
+        id='monyearid',
+        options=[{"label": p, "value": p} for p in month_year_list],
+        placeholder="Select Month Year",
+        multi=True
+    ),
+    dbc.Row([html.H5(month_year , className="text-center" )]),
+    dbc.Row([html.H1(" ")]),
+    dbc.Row([html.H1(" ")]),
+    dbc.Row([html.H1(" ")]),
+    dbc.Row([html.H1(" ")]),
+    dbc.Row( [dbc.Col([dcc.Graph( id= 'PLid', figure=PL)]) , dbc.Col([dcc.Graph(id= 'TopPftPFid', figure=TopPftPF)]) ,
+              dbc.Col([dcc.Graph(id= 'TopLosPFid', figure=TopLosPF)]) , dbc.Col([dcc.Graph(id= 'TopPftAnlid', figure=TopPftAnl)])
+                 , dbc.Col([dcc.Graph(id= 'TopLosAnlid', figure=TopLosAnl)])]),
+    html.Div(id='output4'),
+    dbc.Row([ dbc.Col( dcc.Graph( id= 'figHistAnalystid' , figure= figHistAnalyst, style={"width": "100%", "height": "800px"}) ,width=12 )  ]),
+    dbc.Row([html.Div(id='output6')]),
+    dbc.Row([ dbc.Col(dcc.Graph(id= 'scatter3d', style={"width": "100%", "height": "800px"}), width=12) ]),
+    dcc.Dropdown(
+        id='dd1',
+        options=[{"label": p, "value": p} for p in dfMerged["PortfolioName"].unique()],
+        placeholder="Select Portfolio Name",
+        multi=True
+    ),
+    dcc.Dropdown(
+        id='dd2',
+        options=[{"label": s, "value": s} for s in dfMerged["AnalystGroupGp"].unique()],
+        placeholder="Select Analyst Group",
+        multi=True
+    ),
+    dcc.Dropdown(
+        id='dd3',
+        options=[{"label": a, "value": a} for a in dfMerged["Analyst_Name"].unique()],
+        placeholder="Select Analyst Name",
+        multi=True
+    ),
+    html.Button("Submit", id="submit-btn", n_clicks=0, style={"marginTop": "10px"}),
+    html.Div(id='output'),
+    dbc.Row([ dbc.Col( dcc.Graph( id= 'figHistPflioid' , figure= figHistPflio, style={"width": "100%", "height": "800px"}) ,width=12 )  ]),
+    dbc.Row([ dbc.Col(dcc.Graph(id= 'scatter3dAnlstPortSig', style={"width": "100%", "height": "800px"}), width=12) ]),
+    html.Div(id='output5'),
+    dbc.Row([ dbc.Col(dcc.Graph(id= 'scatter3dSigid', style={"width": "100%", "height": "800px"}), width=12) ]),
+    dbc.Row([ dbc.Col(dcc.Graph(id= 'scatter3dSigidIndividual', style={"width": "100%", "height": "800px"}), width=12) ]),
+
+])
+
+@app.callback(
+    Output('PLid', 'figure'),
+    Output('TopPftPFid', 'figure'),
+    Output('TopLosPFid', 'figure'),
+    Output('TopPftAnlid', 'figure'),
+    Output('TopLosAnlid', 'figure'),
+    Input('monyearid', 'value')
+)
+def update_dfMerge(monthyear):
+    if monthyear:
+        monthyear = monthyear[0]
+        dfMerged = pl.read_parquet(f'{inputPath}dfMerged_{monthyear}.parquet')
+        app.server.dfMerged = dfMerged
+        PL, TopPftPF, TopLosPF, TopPftAnl, TopLosAnl = updatePies(dfMerged)
+        print(f'{inputPath}dfMerged_{monthyear}.parquet')
+        return PL, TopPftPF, TopLosPF, TopPftAnl, TopLosAnl
+    else:
+        dfMerged = pl.read_parquet(f'{inputPath}dfMerged_aug_25.parquet')
+        app.server.dfMerged = dfMerged
+        PL= go.Figure()
+        TopPftPF= go.Figure()
+        TopLosPF= go.Figure()
+        TopPftAnl= go.Figure()
+        TopLosAnl= go.Figure()
+        return PL, TopPftPF, TopLosPF, TopPftAnl, TopLosAnl
+
+
+@app.callback(
+    Output('dd1', 'options'),
+    Output('dd2', 'options'),
+    Output('dd3', 'options'),
+    # Output('output', 'children'),
+    Output('figHistPflioid', 'figure'),
+    Input('submit-btn', 'n_clicks'),
+    State('dd1', 'value'),
+    State('dd2', 'value'),
+    State('dd3', 'value'),
+    prevent_initial_call=True
+)
+
+def update_dropdowns(n_clicks, PortfolioName, AnalystGroupGp, Analyst_Name ):
+
+    if ( not (PortfolioName) and not (AnalystGroupGp) and not (Analyst_Name)):
+        print("No Filter")
+        dfMerged = app.server.dfMerged
+
+        # mcxList = ['ALUMINIUM', 'SILVERM', 'ALUMINI', 'ZINCMINI', 'NICKEL', 'LEADMINI', 'GOLD', 'COPPER', 'LEAD',
+        #            'NATURALGAS', 'GOLDM', 'ZINC', 'CRUDEOIL', 'SILVER', 'COTTON']
+        # dfMerged = dfMerged.filter(~pl.col('SCRIP_NAME').is_in(mcxList))
+
+        print(f"app.server.dfMerged head {dfMerged.head()}")
+        df_filtered = dfMerged
+        figHistPflio = go.Figure()
+
+        # Prepare distinct values for each dropdown (based on filtered data)
+        dd1_options = [{"label": v, "value": v} for v in sorted(df_filtered["PortfolioName"].unique().to_list())]
+        dd2_options = [{"label": v, "value": v} for v in sorted(df_filtered["AnalystGroupGp"].unique().to_list())]
+        dd3_options = [{"label": v, "value": v} for v in sorted(df_filtered["Analyst_Name"].unique().to_list())]
+        print(sorted(df_filtered["AnalystGroupGp"].unique().to_list()))
+
+        # dfMerged.write_csv("E:/Tradeoutput_fromDatabaseParquet/csv/output.csv")
+        preview_html = df_filtered.head().to_pandas().to_html(index=False)
+        # return dd1_options, dd2_options, dd3_options, preview_html, figHistPflio
+        return dd1_options, dd2_options, dd3_options, figHistPflio
+    else:
+        dfMerged = app.server.dfMerged
+        # mcxList = ['ALUMINIUM', 'SILVERM', 'ALUMINI', 'ZINCMINI', 'NICKEL', 'LEADMINI', 'GOLD', 'COPPER', 'LEAD',
+        #            'NATURALGAS', 'GOLDM', 'ZINC', 'CRUDEOIL', 'SILVER', 'COTTON']
+        # dfMerged = dfMerged.filter(~pl.col('SCRIP_NAME').is_in(mcxList))
+        df_filtered = dfMerged
+
+        if PortfolioName:
+            df_filtered = df_filtered.filter(pl.col("PortfolioName").is_in(PortfolioName))
+        if AnalystGroupGp:
+            df_filtered = df_filtered.filter(pl.col("AnalystGroupGp").is_in(AnalystGroupGp))
+        if Analyst_Name:
+            df_filtered = df_filtered.filter(pl.col("Analyst_Name").is_in(Analyst_Name))
+
+
+
+        # Prepare distinct values for each dropdown (based on filtered data)
+        dd1_options = [{"label": v, "value": v} for v in sorted(df_filtered["PortfolioName"].unique().to_list())]
+        dd2_options = [{"label": v, "value": v} for v in sorted(df_filtered["AnalystGroupGp"].unique().to_list())]
+        dd3_options = [{"label": v, "value": v} for v in sorted(df_filtered["Analyst_Name"].unique().to_list())]
+        print(sorted(df_filtered["AnalystGroupGp"].unique().to_list()))
+
+        dfMerged = df_filtered
+
+
+        dfMerged = dfMerged.sort(['ExitDateTime'])
+
+        dfMerged = dfMerged.with_columns(pl.when(pl.col('LongStatus')).then(
+            (pl.col('ExitPrice') - pl.col('EntryPrice')) * pl.col('EntryQty') * pl.col('Factor') / pl.lit(
+                100)).otherwise(
+            (pl.col('EntryPrice') - pl.col('ExitPrice')) * pl.col('EntryQty') * pl.col('Factor') / pl.lit(100)).alias(
+            'plActualWtCost'))
+
+        #-- cost
+        dfMerged = dfMerged.with_columns(
+            pl.when(pl.col('CostId').is_in([1]))
+                .then(
+                pl.col('EntryQty')*(pl.col('Factor') / pl.lit(100)) * pl.col('entrycost') / pl.lit(2)
+            )
+                .when(pl.col('CostId').is_in([2]))
+                .then(pl.col('entrycost') / pl.lit(2))
+                .otherwise(pl.col('EntryPrice') * pl.col('EntryQty')*(pl.col('Factor') / pl.lit(100))  * pl.col('entrycost') / pl.lit(100)).alias(
+                'entrytradecost')
+        )
+
+        dfMerged = dfMerged.with_columns(
+            pl.when(pl.col('CostId').is_in([1]))
+                .then(
+                pl.col('EntryQty')*(pl.col('Factor') / pl.lit(100))  * pl.col('exitcost') / pl.lit(2)
+            )
+                .when(pl.col('CostId').is_in([2]))
+                .then(pl.col('exitcost') / pl.lit(2))
+                .otherwise(pl.col('ExitPrice') * pl.col('EntryQty')*(pl.col('Factor') / pl.lit(100)) * pl.col('exitcost') / pl.lit(100)).alias(
+                'exittradecost')
+        )
+        # dfMerged = dfMerged.with_columns((pl.col('plActualWtCost') - pl.col('entrytradecost') - pl.col('exittradecost')).alias('plActualWtCost'))
+        dfMerged = dfMerged.with_columns(
+            (pl.col('plActualWtCost') - pl.col('entrytradecost')).alias('plActualWtCost'))
+        #-- cost
+
+        dfMerged = dfMerged.with_columns(pl.col('plActualWtCost').cast(pl.Float64))
+
+        dfMerged = dfMerged.with_columns(
+            pl.when(pl.col('plActualWtCost') < 0).then(pl.col('plActualWtCost')).otherwise(pl.lit(0)).alias('losses'))
+        dfMerged = dfMerged.with_columns(
+            pl.when(pl.col('plActualWtCost') > 0).then(pl.col('plActualWtCost')).otherwise(pl.lit(0)).alias('profits'))
+
+        dfMerged = (
+            dfMerged
+                .with_columns(pl.col("plActualWtCost").cum_sum().alias("MTM"))
+                .with_columns(pl.col("MTM").cum_max().alias("running_peak"))
+                .with_columns((pl.col("MTM") - pl.col("running_peak")).alias("dd"))
+        )
+        dfMerged = (
+            dfMerged
+                .with_columns(pl.col("plActualWtCost").cum_sum().alias("MTM"))
+                .with_columns(
+                (pl.concat([pl.lit(0), pl.col("MTM")])  # prepend 0 baseline
+                 .cum_max()
+                 .slice(1)  # drop the extra first row
+                 ).alias("running_peak")
+            )
+                .with_columns((pl.col("MTM") - pl.col("running_peak")).alias("dd"))
+        )
+
+        dfMerged = dfMerged.with_columns(
+            ((pl.col('EntryQty') * pl.col('EntryPrice') * pl.col('Factor') / pl.lit(100)) / pl.col('DevisionValue')).alias(
+                "exposure"))
+
+        dfMerged = dfMerged.with_columns(
+            pl.col("exposure").round(2).cast(pl.Float64).alias("exposure")
+        )
+
+        #------ Add bar figure for All Analysts groups to show ALL portfolios start
+        label = AnalystGroupGp
+
+        dfFltrPortfolios = dfMerged.filter(pl.col('AnalystGroupGp').is_in(label))
+        dfFltrPortfolios = dfFltrPortfolios.select(['PortfolioName', 'plActualWtCost']).group_by('PortfolioName').agg(
+            pl.col('plActualWtCost').sum()).sort(by='plActualWtCost', descending=True)
+
+        dfFltrPortfolios = dfFltrPortfolios.to_pandas()
+
+        figHistPflio = go.Figure()
+        figHistPflio.add_trace(
+            go.Bar(
+                x=dfFltrPortfolios["PortfolioName"],
+                y=dfFltrPortfolios["plActualWtCost"],
+                marker=dict(color="steelblue")
+            )
+        )
+
+        figHistPflio.update_layout(
+            xaxis_title="Portfolio Name",
+            yaxis_title="Profit/Loss",
+            title={
+                "text": f"Profit/Loss by :- {label}",
+                "x": 0.5,  # 0 = left, 0.5 = center, 1 = right
+                "xanchor": "center",
+                "yanchor": "top"
+            },
+        )
+        # ------ Add bar figure for All Analysts groups to show ALL portfolios end
+
+        dfMerged.write_csv("E:/Tradeoutput_fromDatabaseParquet/csv/output.csv")
+        preview_html = df_filtered.head().to_pandas().to_html(index=False)
+        # return dd1_options, dd2_options, dd3_options, preview_html, figHistPflio
+        return dd1_options, dd2_options, dd3_options,  figHistPflio
+
+#-------------------------------------------------------------------
+@app.callback(
+    Output("output4", "children" ),
+    Input("TopLosAnlid", "clickData"),
+)
+def display_click(clickData):
+
+    if clickData:
+        # Extract the label of the clicked slice
+
+        # label = clickData["points"][0]["label"]
+        label = clickData
+
+        # return f"You clicked on: {label}"
+        return f" "
+    return f" "  # Click on a slice to see the label
+#-------------------------------------------------------------------
+
+#-------------------------------------------------------
+@app.callback(
+    Output("figHistAnalystid", "figure", allow_duplicate=True),
+    Input("TopLosAnlid", "clickData"),
+    prevent_initial_call=True
+)
+def updateHistLosAnl(clickData):
+    figHistAnalyst = go.Figure()
+    if clickData:
+        # Extract the label of the clicked slice
+
+        label = clickData["points"][0]["label"]
+        dfMerged = app.server.dfMerged
+        dfFltrAnalPortfolio = dfMerged.filter(pl.col('AnalystGroupGp') == label)
+        dfFltrAnalPortfolio = dfFltrAnalPortfolio.select(['PortfolioName', 'plActualWtCost']).group_by('PortfolioName').agg(
+            pl.col('plActualWtCost').sum()).sort(by='plActualWtCost', descending=True)
+
+        dfFltrAnalPortfolio = dfFltrAnalPortfolio.to_pandas()
+
+        figHistAnalyst = go.Figure()
+        figHistAnalyst.add_trace(
+            go.Bar(
+                x=dfFltrAnalPortfolio["PortfolioName"],
+                y=dfFltrAnalPortfolio["plActualWtCost"],
+                marker=dict(color="steelblue"),
+
+            )
+        )
+        figHistAnalyst.update_layout(
+            xaxis_title="Portfolio Name",
+            yaxis_title="Profit/Loss",
+            title={
+                "text": f"Profit/Loss by :- {label}",
+                "x": 0.5,  # 0 = left, 0.5 = center, 1 = right
+                "xanchor": "center",
+                "yanchor": "top"
+            },
+        )
+    return figHistAnalyst
+#-------------------------------------------------------
+#-------------------------------------------------------
+@app.callback(
+    Output("figHistAnalystid", "figure", allow_duplicate=True),
+    Input("TopPftAnlid", "clickData"),
+    prevent_initial_call=True
+)
+def updateHistPftAnl(clickData):
+    figHistAnalyst = go.Figure()
+    if clickData:
+        # Extract the label of the clicked slice
+
+        label = clickData["points"][0]["label"]
+        dfMerged = app.server.dfMerged
+        dfFltrAnalPortfolio = dfMerged.filter(pl.col('AnalystGroupGp') == label)
+        dfFltrAnalPortfolio = dfFltrAnalPortfolio.select(['PortfolioName', 'plActualWtCost']).group_by('PortfolioName').agg(
+            pl.col('plActualWtCost').sum()).sort(by='plActualWtCost', descending=True)
+
+        dfFltrAnalPortfolio = dfFltrAnalPortfolio.to_pandas()
+
+        figHistAnalyst = go.Figure()
+        figHistAnalyst.add_trace(
+            go.Bar(
+                x=dfFltrAnalPortfolio["PortfolioName"],
+                y=dfFltrAnalPortfolio["plActualWtCost"],
+                marker=dict(color="steelblue")
+            )
+        )
+
+        figHistAnalyst.update_layout(
+            xaxis_title="Portfolio Name",
+            yaxis_title="Profit/Loss",
+            title={
+                "text": f"Profit/Loss by :- {label}",
+                "x": 0.5,  # 0 = left, 0.5 = center, 1 = right
+                "xanchor": "center",
+                "yanchor": "top"
+            },
+        )
+    return figHistAnalyst
+#-------------------------------------------------------
+#-------------------------------------------------------
+@app.callback(
+    Output("figHistAnalystid", "figure", allow_duplicate=True),
+    Input("TopLosPFid", "clickData"),
+    prevent_initial_call=True
+)
+def updateHistLosPF(clickData):
+    figTopLosPFid = go.Figure()
+    if clickData:
+        # Extract the label of the clicked slice
+
+        label = clickData["points"][0]["label"]
+        dfMerged = app.server.dfMerged
+        dfFltrTopLosPFid = dfMerged.filter(pl.col('PortfolioName') == label)
+        dfFltrTopLosPFid = dfFltrTopLosPFid.select(['AnalystGroupGp', 'plActualWtCost']).group_by('AnalystGroupGp').agg(
+            pl.col('plActualWtCost').sum()).sort(by='plActualWtCost', descending=True)
+
+        dfFltrTopLosPFid = dfFltrTopLosPFid.to_pandas()
+
+        figTopLosPFid = go.Figure()
+        figTopLosPFid.add_trace(
+            go.Bar(
+                x=dfFltrTopLosPFid["AnalystGroupGp"],
+                y=dfFltrTopLosPFid["plActualWtCost"],
+                marker=dict(color="steelblue")
+            )
+        )
+
+        figTopLosPFid.update_layout(
+            xaxis_title="Portfolio Name",
+            yaxis_title="Profit/Loss",
+            title={
+                "text": f"Profit/Loss by :- {label}",
+                "x": 0.5,  # 0 = left, 0.5 = center, 1 = right
+                "xanchor": "center",
+                "yanchor": "top"
+            },
+        )
+    return figTopLosPFid
+#-------------------------------------------------------
+#-------------------------------------------------------
+@app.callback(
+    Output("figHistAnalystid", "figure", allow_duplicate=True),
+    Input("TopPftPFid", "clickData"),
+    prevent_initial_call=True
+)
+def updateHistPftPF(clickData):
+    figTopPftPFid = go.Figure()
+    if clickData:
+        # Extract the label of the clicked slice
+
+        label = clickData["points"][0]["label"]
+        dfMerged = app.server.dfMerged
+        dfFltrTopPftPFid = dfMerged.filter(pl.col('PortfolioName') == label)
+        dfFltrTopPftPFid = dfFltrTopPftPFid.select(['AnalystGroupGp', 'plActualWtCost']).group_by('AnalystGroupGp').agg(
+            pl.col('plActualWtCost').sum()).sort(by='plActualWtCost', descending=True)
+
+        dfFltrTopPftPFid = dfFltrTopPftPFid.to_pandas()
+
+        figTopPftPFid = go.Figure()
+        figTopPftPFid.add_trace(
+            go.Bar(
+                x=dfFltrTopPftPFid["AnalystGroupGp"],
+                y=dfFltrTopPftPFid["plActualWtCost"],
+                marker=dict(color="steelblue")
+            )
+        )
+
+        figTopPftPFid.update_layout(
+            xaxis_title="Portfolio Name",
+            yaxis_title="Profit/Loss",
+            title={
+                "text": f"Profit/Loss by :- {label}",
+                "x": 0.5,  # 0 = left, 0.5 = center, 1 = right
+                "xanchor": "center",
+                "yanchor": "top"
+            },
+        )
+    return figTopPftPFid
+#-------------------------------------------------------
+
+#------------------------------------------------------------------------------------
+@app.callback(
+    Output("output5", "children", allow_duplicate=True),
+    Output("scatter3d", "figure", allow_duplicate=True),
+    Input("TopLosAnlid", "clickData"),
+    Input("figHistAnalystid", "clickData"),
+    prevent_initial_call=True
+)
+def update_scatter(TopLosAnlid, figHistAnalystid):
+    # Extract selections
+    x_axis = TopLosAnlid["points"][0]["label"] if TopLosAnlid else None
+    y_axis = figHistAnalystid["points"][0]["x"] if figHistAnalystid else None
+
+    fig = go.Figure(
+        layout=go.Layout(
+            title={
+                'text': f'{y_axis}  :-  {x_axis}',
+                'x': 0.5,  # 0 = left, 0.5 = center, 1 = right
+                'xanchor': 'center',
+                'yanchor': 'top'
+            },
+            xaxis={'title': f'{x_axis}'},
+            hovermode='closest'
+        )
+    )
+    if (x_axis is not None  and y_axis is not None):
+        dfMerged = app.server.dfMerged
+        dfFiltered = dfMerged.filter(pl.col('AnalystGroupGp')== str(x_axis).strip())
+        dfFiltered = dfFiltered.filter(pl.col('PortfolioName')==str(y_axis).strip())
+
+        sizes = np.abs(dfFiltered['plActualWtCost'])
+
+        # normalize sizes to a range (say 2–15 pixels)
+        sizes_scaled = 2 + (sizes / sizes.max()) * 4
+
+        colors = np.where(dfFiltered['plActualWtCost'] > 0, 'green', 'red')
+        fig.add_trace( go.Scatter3d(
+                                    x=dfFiltered['ExitDateTime'],
+                                    y=dfFiltered['Strategy_Name'],
+                                    z= dfFiltered['plActualWtCost'],
+                                    mode='markers',
+                                    opacity=0.6,
+                                    marker=dict(
+                                        size=sizes_scaled,  # scaled bubble sizes
+                                        sizemode='diameter',
+                                        color = colors,
+                                    ),
+                                    )
+                       )
+
+
+
+    return  y_axis , fig
+#---------------------------------------------------
+# ------------------------------------------------------------------------------------
+@app.callback(
+    Output("output5", "children" , allow_duplicate=True),
+    Output("scatter3d", "figure", allow_duplicate=True),
+    Input("TopPftAnlid", "clickData"),
+    Input("figHistAnalystid", "clickData"),
+    prevent_initial_call=True
+)
+def update_scatter(TopPftAnlid, figHistAnalystid):
+    # Extract selections
+    x_axis = TopPftAnlid["points"][0]["label"] if TopPftAnlid else None
+    y_axis = figHistAnalystid["points"][0]["x"] if figHistAnalystid else None
+
+    fig = go.Figure(
+        layout=go.Layout(
+            title={
+                'text': f'{y_axis}  :-  {x_axis}',
+                'x': 0.5,  # 0 = left, 0.5 = center, 1 = right
+                'xanchor': 'center',
+                'yanchor': 'top'
+            },
+            xaxis={'title': f'{x_axis}'},
+            hovermode='closest'
+        )
+    )
+    if (x_axis is not None and y_axis is not None):
+        dfMerged = app.server.dfMerged
+        dfFiltered = dfMerged.filter(pl.col('AnalystGroupGp') == str(x_axis).strip())
+        dfFiltered = dfFiltered.filter(pl.col('PortfolioName') == str(y_axis).strip())
+
+        sizes = np.abs(dfFiltered['plActualWtCost'])
+
+        # normalize sizes to a range (say 2–15 pixels)
+        sizes_scaled = 2 + (sizes / sizes.max()) * 4
+
+        colors = np.where(dfFiltered['plActualWtCost'] > 0, 'green', 'red')
+        fig.add_trace(go.Scatter3d(
+            x=dfFiltered['ExitDateTime'],
+            y=dfFiltered['Strategy_Name'],
+            z=dfFiltered['plActualWtCost'],
+            mode='markers',
+            opacity=0.6,
+            marker=dict(
+                size=sizes_scaled,  # scaled bubble sizes
+                sizemode='diameter',
+                color=colors,
+            ),
+        )
+        )
+
+    return y_axis, fig
+# ---------------------------------------------------
+# ------------------------------------------------------------------------------------
+@app.callback(
+    Output("output5", "children" , allow_duplicate=True),
+    Output("scatter3d", "figure", allow_duplicate=True),
+    Input("TopLosPFid", "clickData"),
+    Input("figHistAnalystid", "clickData"),
+    prevent_initial_call=True
+)
+def update_scatter(TopLosPFid, figHistAnalystid):
+    # Extract selections
+    y_axis = TopLosPFid["points"][0]["label"] if TopLosPFid else None
+    x_axis = figHistAnalystid["points"][0]["x"] if figHistAnalystid else None
+    fig = go.Figure(
+        layout=go.Layout(
+            title={
+                'text': f'{y_axis}  :-  {x_axis}',
+                'x': 0.5,  # 0 = left, 0.5 = center, 1 = right
+                'xanchor': 'center',
+                'yanchor': 'top'
+            },
+            xaxis={'title': f'{x_axis}'},
+            hovermode='closest'
+        )
+    )
+    if (x_axis is not None and y_axis is not None):
+        dfMerged = app.server.dfMerged
+        dfFiltered = dfMerged.filter(pl.col('AnalystGroupGp') == str(x_axis).strip())
+        dfFiltered = dfFiltered.filter(pl.col('PortfolioName') == str(y_axis).strip())
+
+        sizes = np.abs(dfFiltered['plActualWtCost'])
+
+        # normalize sizes to a range (say 2–15 pixels)
+        sizes_scaled = 2 + (sizes / sizes.max()) * 4
+
+        colors = np.where(dfFiltered['plActualWtCost'] > 0, 'green', 'red')
+        fig.add_trace(go.Scatter3d(
+            x=dfFiltered['ExitDateTime'],
+            y=dfFiltered['Strategy_Name'],
+            z=dfFiltered['plActualWtCost'],
+            mode='markers',
+            opacity=0.6,
+            marker=dict(
+                size=sizes_scaled,  # scaled bubble sizes
+                sizemode='diameter',
+                color=colors,
+            ),
+        )
+        )
+
+    return y_axis, fig
+# ------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------------
+@app.callback(
+    Output("output5", "children" , allow_duplicate=True),
+    Output("scatter3d", "figure", allow_duplicate=True),
+    Input("TopPftPFid", "clickData"),
+    Input("figHistAnalystid", "clickData"),
+    prevent_initial_call=True
+)
+def update_scatter(TopPftPFid, figHistAnalystid):
+    # Extract selections
+    y_axis = TopPftPFid["points"][0]["label"] if TopPftPFid else None
+    x_axis = figHistAnalystid["points"][0]["x"] if figHistAnalystid else None
+    fig = go.Figure(
+        layout=go.Layout(
+            title={
+                'text': f'{y_axis}  :-  {x_axis}',
+                'x': 0.5,  # 0 = left, 0.5 = center, 1 = right
+                'xanchor': 'center',
+                'yanchor': 'top'
+            },
+            xaxis={'title': f'{x_axis}'},
+            hovermode='closest'
+        )
+    )
+    if (x_axis is not None and y_axis is not None):
+        dfMerged = app.server.dfMerged
+        dfFiltered = dfMerged.filter(pl.col('AnalystGroupGp') == str(x_axis).strip())
+        dfFiltered = dfFiltered.filter(pl.col('PortfolioName') == str(y_axis).strip())
+
+        sizes = np.abs(dfFiltered['plActualWtCost'])
+
+        # normalize sizes to a range (say 2–15 pixels)
+        sizes_scaled = 2 + (sizes / sizes.max()) * 4
+
+        colors = np.where(dfFiltered['plActualWtCost'] > 0, 'green', 'red')
+        fig.add_trace(go.Scatter3d(
+            x=dfFiltered['ExitDateTime'],
+            y=dfFiltered['Strategy_Name'],
+            z=dfFiltered['plActualWtCost'],
+            mode='markers',
+            opacity=0.6,
+            marker=dict(
+                size=sizes_scaled,  # scaled bubble sizes
+                sizemode='diameter',
+                color=colors,
+            ),
+        )
+        )
+
+    return y_axis, fig
+# ---------------------------------------------------
+
+
+# --------------------------------------------------- scatter start -----
+@app.callback(
+
+    Output("scatter3dAnlstPortSig", "figure", allow_duplicate=True),
+    Input("figHistPflioid", "clickData"),
+    Input("dd2", "options"),
+    Input("dd3", "options"),
+    prevent_initial_call=True
+)
+def update_scatter_AnlstPortSig(figHistPflioid, dd2, dd3):
+
+    # Extract selections
+    y_axis =  dd2[0]['label']
+    codedd3 = dd3[0]['label']
+    x_axis =  figHistPflioid["points"][0]["label"] if figHistPflioid else None
+    print(f"click Dedected {x_axis} ****----***** {y_axis}----*****{codedd3}")
+    scatter3dAnlstPortSig = go.Figure(
+        layout=go.Layout(
+            title={
+                'text': f'{y_axis}  :-  {x_axis}',
+                'x': 0.5,  # 0 = left, 0.5 = center, 1 = right
+                'xanchor': 'center',
+                'yanchor': 'top'
+            },
+            xaxis={'title': f'{x_axis}'},
+            hovermode='closest'
+        )
+    )
+
+
+    if (x_axis is not None and (y_axis is not None or codedd3 is not None)):
+        if (y_axis is not None):
+            dfMerged = app.server.dfMerged
+            dfFiltered = dfMerged.filter(pl.col('PortfolioName') == str(x_axis).strip())
+            dfFiltered = dfFiltered.filter(pl.col('AnalystGroupGp') == str(y_axis).strip())
+        else:
+            dfMerged = app.server.dfMerged
+            dfFiltered = dfMerged.filter(pl.col('PortfolioName') == str(x_axis).strip())
+            dfFiltered = dfFiltered.filter(pl.col('Analyst_Code') == str(codedd3).strip())
+
+
+        sizes = np.abs(dfFiltered['plActualWtCost'])
+
+        netpl = round( dfFiltered['plActualWtCost'].sum(),0)
+
+        # normalize sizes to a range (say 2–15 pixels)
+        sizes_scaled = 2 + (sizes / sizes.max()) * 4
+
+        colors = np.where(dfFiltered['plActualWtCost'] > 0, 'green', 'red')
+        scatter3dAnlstPortSig.add_trace(go.Scatter3d(
+            x=dfFiltered['ExitDateTime'],
+            y=dfFiltered['Signal_Name'],
+            z=dfFiltered['plActualWtCost'],
+            mode='markers',
+            opacity=0.6,
+            marker=dict(
+                size=sizes_scaled,  # scaled bubble sizes
+                sizemode='diameter',
+                color=colors,
+            ),
+        )
+        )
+
+        scatter3dAnlstPortSig.update_layout(
+            title=dict(
+                text=f"Profit/Loss {netpl} for {x_axis} - {y_axis} ",
+                x=0.5,  # center the title
+                xanchor="center",
+                font=dict(size=20)
+            )
+        )
+
+        dfFiltered.write_csv(f"{outputPath}output.csv")
+    return scatter3dAnlstPortSig
+# --------------------------------------------------- scatter start -----
+
+
+# --------------------------------------------------- scatter start -----
+@app.callback(
+              Output('scatter3dSigid', 'figure'),
+              [Input(component_id='scatter3dAnlstPortSig', component_property='clickData')])
+
+def clickDataToObj(clkdata):
+    print(clkdata)
+    scatter3dSigid = go.Figure()
+    filteredRow =0
+    if clkdata:
+        # signl = clkdata['points'][0]['y']
+
+
+        # print(signl)
+        # dfFiltered = dfMerged.filter(pl.col('Signal_Name') == str(signl).strip())
+        ts_str = clkdata['points'][0]['x']
+        print(f"ts_str {ts_str} ")
+        ts_trimmed = ts_str[:26]  # keeps up to microseconds
+        date_part = datetime.datetime.fromisoformat(ts_trimmed).date()
+        print(f"date_part {date_part} ")
+        dfMerged = app.server.dfMerged
+        dfFiltered = dfMerged.filter(pl.col('ExitDate') == date_part)
+
+
+        print(dfFiltered.head())
+
+        sizes = np.abs(dfFiltered['plActualWtCost'])
+
+        netpl = round( dfFiltered['plActualWtCost'].sum(),0)
+
+        sizes_scaled = 2 + (sizes / sizes.max()) * 4
+
+        colors = np.where(dfFiltered['plActualWtCost'] > 0, 'green', 'red')
+
+        scatter3dSigid.add_trace(go.Scatter3d(
+            x=dfFiltered['ExitDateTime'],
+            y=dfFiltered['Signal_Name'],
+            z=dfFiltered['plActualWtCost'],
+            mode='markers',
+            opacity=0.6,
+            marker=dict(
+                size=sizes_scaled,  # scaled bubble sizes
+                sizemode='diameter',
+                color=colors,
+            ),
+        )
+        )
+
+        scatter3dSigid.update_layout(
+            title=dict(
+                text=f"Profit/Loss {netpl} for {date_part}  ",
+                x=0.5,  # center the title
+                xanchor="center",
+                font=dict(size=20)
+            )
+        )
+
+    return scatter3dSigid
+
+# --------------------------------------------------- scatter start -----
+
+# --------------------------------------------------- scatter start -----
+@app.callback(
+              Output('scatter3dSigidIndividual', 'figure'),
+              [Input(component_id='scatter3dSigid', component_property='clickData')])
+
+def clickDataToObjIndividual(clkdata):
+    print(clkdata)
+    scatter3dSigidInd = go.Figure()
+    filteredRow =0
+    if clkdata:
+        signl = clkdata['points'][0]['y']
+
+
+        # print(signl)
+        dfMerged = app.server.dfMerged
+        dfFiltered = dfMerged.filter(pl.col('Signal_Name') == str(signl).strip())
+
+
+
+        print(dfFiltered.head())
+
+        sizes = np.abs(dfFiltered['plActualWtCost'])
+
+        netpl = round( dfFiltered['plActualWtCost'].sum(),0)
+
+        sizes_scaled = 2 + (sizes / sizes.max()) * 4
+
+        colors = np.where(dfFiltered['plActualWtCost'] > 0, 'green', 'red')
+
+        scatter3dSigidInd.add_trace(go.Scatter3d(
+            x=dfFiltered['ExitDateTime'],
+            y=dfFiltered['Signal_Name'],
+            z=dfFiltered['plActualWtCost'],
+            mode='markers',
+            opacity=0.6,
+            marker=dict(
+                size=sizes_scaled,  # scaled bubble sizes
+                sizemode='diameter',
+                color=colors,
+            ),
+        )
+        )
+
+        scatter3dSigidInd.update_layout(
+            title=dict(
+                text=f"Profit/Loss {netpl} for {signl}  ",
+                x=0.5,  # center the title
+                xanchor="center",
+                font=dict(size=20)
+            )
+        )
+
+    return scatter3dSigidInd
+
+# --------------------------------------------------- scatter start -----
+
+
+if __name__ == '__main__':
+    # app.run_server(host='0.0.0.0', port=8050, debug=True)
+    app.run_server(host='192.168.1.183', port=8050, debug=True)
+    app.run_server( debug=True)
+#####################  Dynamic  ################################################################################################################################################### 5
