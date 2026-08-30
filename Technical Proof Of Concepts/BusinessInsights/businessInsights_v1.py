@@ -5,7 +5,6 @@ import datetime
 import dash
 import plotly
 
-
 pd.set_option('display.max_columns', None)
 pl.Config.set_fmt_float("full")
 
@@ -19,7 +18,6 @@ import plotly.graph_objects as go
 from datetime import datetime
 from dash import dcc, html, Input, Output
 import polars as pl
-
 
 
 import polars as pl
@@ -160,62 +158,121 @@ dfStrategy = df.group_by([pl.col('Strategy')]).agg(pl.col('profitLoss').sum().al
 lStrategy = dfStrategy['Strategy'].to_list()
 vStrategy = dfStrategy['pl'].to_list()
 
+dfSeries = (df.group_by("SERIES").agg(pl.col("profitLoss").sum().alias("pl")).sort("pl", descending=True).head(5).collect())
+lSeries = dfSeries['SERIES'].to_list()
+vSeries = dfSeries['pl'].to_list()
 
 
-dropdown =  dcc.Dropdown(
-        id='portfolioId',
-        options=[{"label": p, "value": p} for p in lstPortfolio],
-        placeholder="Select Portfolio",
-        style={'fontSize': '12px'},
-        multi=True
-    ),
-dropdown1 =  dcc.Dropdown(
+
+dropdownPortfolio =  dcc.Dropdown(
         id='portfolioId1',
         options=[{"label": p, "value": p} for p in lstPortfolio],
         placeholder="Select Portfolio",
         style={'fontSize': '12px'},
         multi=True
     ),
-
-fig1= dcc.Graph(id='gpStrategy1',
-                                style={"height": "150px", "width": "100%"},
+dropdownStrategy =  dcc.Dropdown(
+        id='strategyId1',
+        options=[{"label": p, "value": p} for p in lstStrategy],
+        placeholder="Select Strategy",
+        style={'fontSize': '12px'},
+        multi=True
+    ),
+dropdownSeries =  dcc.Dropdown(
+        id='seriesId1',
+        options=[{"label": p, "value": p} for p in lSeries],
+        placeholder="Select Series",
+        style={'fontSize': '12px'},
+        multi=True
+    ),
+fig1= dcc.Graph(id='gpPortfolio1',
+                                style={"height": "125px", "width": "100%"},
                                 config={"displayModeBar": False},
-                                figure=go.Figure(data=[go.Pie(labels=lStrategy, values=vStrategy
+                                figure=go.Figure(data=[go.Pie(labels=lportfolio, values=vportfolio
                                                             , showlegend=False
-                                                            , hole=0.5, )]).update_layout(
+                                                            , hole=0.5
+                                                            , textinfo = "percent"
+                                                            , textposition = "inside"
+)]).update_layout(
     margin=dict(l=0, r=0, t=0, b=0)
 ))
 
 
 fig2= dcc.Graph(id='gpStrategy2',
-                                style={"height": "150px", "width": "100%"},
+                                style={"height": "125px", "width": "100%"},
                                 config={"displayModeBar": False},
                                 figure=go.Figure(data=[go.Pie(labels=lStrategy, values=vStrategy
                                                             , showlegend=False
-                                                            , hole=0.5,)]).update_layout(
+                                                            , hole=0.5
+                                                            , textinfo = "percent"
+                                                            ,textposition = "inside")]
+                                                 ).update_layout(
     margin=dict(l=0, r=0, t=0, b=0)
 ))
 
-fig3= dcc.Graph(id='gpStrategy3',
-                                style={"height": "150px", "width": "100%"},
+figSeries1= dcc.Graph(id='gpSeries1',
+                                style={"height": "125px", "width": "100%"},
                                 config={"displayModeBar": False},
-                                figure=go.Figure(data=[go.Pie(labels=lStrategy, values=vStrategy
+                                figure=go.Figure(data=[go.Pie(labels=lSeries, values=vSeries
                                                             , showlegend=False
-                                                            , hole=0.5,)]).update_layout(
+                                                            , hole=0.5
+                                                            , textinfo="percent",
+                                                              textposition="inside")]).update_layout(
     margin=dict(l=0, r=0, t=0, b=0)
 ))
 
-fig4= dcc.Graph(id='gpStrategy4',
-                                style={"height": "150px", "width": "100%"},
-                                config={"displayModeBar": False},
-                                figure=go.Figure(data=[go.Pie(labels=lStrategy, values=vStrategy
-                                                            , showlegend=False
-                                                            , hole=0.5,)]).update_layout(
-    margin=dict(l=0, r=0, t=0, b=0)
-))
+mainTitle  = html.Div([ html.H3 ('Analytics Platform')],style={"text-align": "center", "width": "100%"})
+# txtAboutPlatform0 = "Technical Challenges"  # txtAboutPlatform0
+
+txtAboutPlatform0 =  dbc.Container([
+    html.H4("Technical Challenges", id="tipPlatformForAnalytics"),
+    dbc.Tooltip(
+        html.Div(
+    [
+        html.B("Common Issues", style={"fontSize": "16px"}),
+        html.Hr(style={"margin": "4px 0"}),
+        html.Ul(
+            [
+                html.Li("Slow response"),
+                html.Li("Drill-down and drill-through are slow"),
+                html.Li("Filters freeze"),
+                html.Li("Reports time out"),
+                html.Li("Business calculations become difficult"),
+                html.Li("Performance degrades quickly"),
+                html.Li("Lacks flexibility"),
+                html.Li("Limited custom algorithms"),
+                html.Li("Cost escalation"),
+                html.Li("Limited intractivity"),
+            ],
+            style={
+                "paddingLeft": "18px",
+                "margin": "0",
+                "fontSize": "14px",
+                "lineHeight": "1.3",
+            },
+        ),
+            ],
+            style={"text-align": "left", "width": "100%"}
+        ),
+        "Black text on a white background with no borders!",
+        target="tipPlatformForAnalytics",
+        placement="bottom",
+        # This style block overrides Bootstrap 5 CSS variables directly
+        style={
+            "--bs-tooltip-bg": "#ffffff",  # Sets background to white
+            "--bs-tooltip-color": "#000000",  # Sets text to black
+            "text-align": "left",
+            "border": "none",  # Removes any outer border
+            "box-shadow": "0px 4px 10px rgba(0,0,0,0.1)",  # Optional soft shadow for visibility
+        },
+    ),
+
+])
 
 
-txtAboutPlatform = "Technical concepts"
+
+
+
 app.layout = dbc.Container(
     fluid=True,
     style={"backgroundColor": BG_WHITE},
@@ -223,18 +280,23 @@ app.layout = dbc.Container(
     children=[
             dbc.Row([
             dbc.Col([
-                    dbc.Row(dropdown),
-                    dbc.Row(dropdown1),
-                    dbc.Row(html.P(txtAboutPlatform), style={'fontSize': '16px'}),
+                    dbc.Row(dropdownPortfolio),
+                    dbc.Row(dropdownStrategy),
+                    dbc.Row(dropdownSeries),
+                    dbc.Row(html.P(txtAboutPlatform0), style={'fontSize': '16px'}),
                     ],md=3,className="text-left border p-3"),
             dbc.Col([
-                    dbc.Row(html.H4("Analytics Platform"),className="text-center"),
-                    dbc.Row([ dbc.Col(fig1,md=3,className="px-1"), dbc.Col(fig2,md=3,className="px-1"),
-                              dbc.Col(fig3,md=3,className="px-1"), dbc.Col(fig4,md=3,className="px-1")], className="g-1"),
+                    dbc.Row(mainTitle,className="text-center"),
+                    dbc.Row([ dbc.Col(fig1,md=2,className="px-1"), dbc.Col(fig2,md=2,className="px-1"),
+                              dbc.Col(figSeries1,md=2,className="px-1")], className="g-1"),
 
                      ],md=9,className="text-center border p-3")
             ])
 ])
+
+
+
+
+
 if __name__ == "__main__":
-    app.run(debug=True)
-#--------------- Dash App Ends  here --------------------------------
+    app.run(debug=True)#--------------- Dash App Ends  here --------------------------------

@@ -4,6 +4,7 @@ import numpy as np
 import datetime
 import dash
 import plotly
+import plotly.colors as pc
 
 pd.set_option('display.max_columns', None)
 pl.Config.set_fmt_float("full")
@@ -133,6 +134,7 @@ vSeries = dfSeries['pl'].to_list()
 
 # dfPortStrSer = (df.group_by([pl.col('Portfolio'), pl.col('Strategy'), pl.col('SYMBOL'), pl.col('SERIES'), pl.col('DATE1')]).agg(pl.col('profitLoss').sum().alias('pl'))).collect()
 # df = df.filter(pl.col('SERIES')=='EQ')
+df = df.filter(  pl.col("profitLoss").is_between(-50000, 50000))
 dfPortStrSer = (df.group_by([pl.col('Portfolio'), pl.col('Strategy'), pl.col('SYMBOL')]).agg(pl.col('profitLoss').sum().alias('pl'))).collect()
 
 dropdownPortfolio =  dcc.Dropdown(
@@ -200,21 +202,96 @@ figSeries1= dcc.Graph(id='gpSeries1',
 
 #---- 3d
 # 1. Define the 3D Scatter Figure
+
+# Create numeric positions for categorical axes
+x_categories = dfPortStrSer["SYMBOL"].unique().to_list()
+y_categories = dfPortStrSer["Portfolio"].unique().to_list()
+
+x_map = {v: i for i, v in enumerate(x_categories)}
+y_map = {v: i for i, v in enumerate(y_categories)}
+
+x_num = [x_map[v] for v in dfPortStrSer["SYMBOL"].to_list()]
+y_num = [y_map[v] for v in dfPortStrSer["Portfolio"].to_list()]
+
+z = dfPortStrSer["pl"].to_list()
+
+# --------------------------------------------------
+# Create a unique numeric color value for X + Y
+# --------------------------------------------------
+
+xy_pairs = list(
+    zip(
+        dfPortStrSer["SYMBOL"].to_list(),
+        dfPortStrSer["Portfolio"].to_list()
+    )
+)
+
+xy_map = {
+    pair: i
+    for i, pair in enumerate(dict.fromkeys(xy_pairs))
+}
+
+color_values = [xy_map[pair] for pair in xy_pairs]
+
+# --------------------------------------------------
+# Marker size based on absolute P&L
+# --------------------------------------------------
+
+abs_z = np.abs(np.array(z))
+
+# Scale sizes so they remain visually useful
+if abs_z.max() > 0:
+    marker_size = 5 + 20 * abs_z / abs_z.max()
+else:
+    marker_size = np.full(len(abs_z), 5)
+
+xy_pairs = list(
+    zip(
+        dfPortStrSer["SYMBOL"].to_list(),
+        dfPortStrSer["Portfolio"].to_list()
+    )
+)
+
+unique_pairs = list(dict.fromkeys(xy_pairs))
+
+# Plotly qualitative colors
+palette = (
+    pc.qualitative.Plotly
+    + pc.qualitative.D3
+    + pc.qualitative.G10
+    + pc.qualitative.Safe
+    + pc.qualitative.Dark24
+)
+
+color_map = {
+    pair: palette[i % len(palette)]
+    for i, pair in enumerate(unique_pairs)
+}
+
+point_colors = [
+    color_map[pair]
+    for pair in xy_pairs
+]
+
+
+
+
 fig_3d = go.Figure(
     data=[
         go.Scatter3d(
-            # x=[1, 2, 3, 4, 5],  # Replace with your X data
-            # y=[5, 4, 3, 2, 1],  # Replace with your Y data
-            # z=[2, 3, 5, 1, 4],  # Replace with your Z data
-            x = dfPortStrSer['SYMBOL'].to_list(),
-            y = dfPortStrSer['Portfolio'].to_list(),
+
+
+            x = dfPortStrSer['Portfolio'].to_list(),
+            y = dfPortStrSer['SYMBOL'].to_list(),
             z = dfPortStrSer['pl'].to_list(),
             mode="markers",
             marker=dict(
-                size=6,
-                color=[10, 20, 30, 40, 50],  # Sets color based on a variable
+                # size=marker_size,
+                size = 1.5,
+                color= point_colors,  # Sets color based on a variable
                 colorscale="Viridis",  # Choose a color palette
-                opacity=0.8,
+                opacity=0.9,
+                showscale=False,
             ),
         )
     ]
@@ -223,25 +300,54 @@ fig_3d = go.Figure(
 # 2. Update Layout for Titles and Component Sizing
 fig_3d.update_layout(
     title=dict(
-        text="My 3D Scatter Plot",
+        text="Portfolio-Scrip-PL",
         y=.85,  # Move title higher up (closer to 1.0 is top edge)
         x=0.5,
         xanchor="center",
         yanchor="top",
     ),
-    margin=dict(l=0, r=0, b=0, t=40),  # Tight margins to maximize graph area
+    margin=dict(l=0, r=0, b=0, t=0),  # Tight margins to maximize graph area
     scene=dict(
-        xaxis_title="X Axis Name",
-        yaxis_title="Y Axis Name",
-        zaxis_title="Z Axis Name",
-    ),
+        xaxis=dict(
+            title="Symbol"
+        ),
+        yaxis=dict(
+            title="Portfolio"
+        ),
+        zaxis=dict(
+            title="Profit / Loss",
+            range=[-50000, 50000],
+            dtick=10000
+        )
+    )
+,
 )
 
 
 
 # 3. Assign it to your dcc.Graph component
-scatter3d_1 = dcc.Graph(figure=fig_3d, style={"height": "340px", "width": "650px", })
-scatter3d_2 = dcc.Graph(figure=fig_3d, style={"height": "300px", "width": "650px", })
+
+
+scatter3d_1 = dcc.Graph(
+    id="scatter3d_1",
+    figure=fig_3d,  # or your second figure
+    style={
+        "height": "400px",
+        "width": "100%"
+    },
+    config={"displayModeBar": False}
+)
+
+scatter3d_2 = dcc.Graph(
+    id="scatter3d_2",
+    figure=fig_3d,  # or your second figure
+    style={
+        "height": "750px",
+        "width": "100%"
+    },
+    config={"displayModeBar": False}
+)
+
 
 #---- 3d
 
@@ -293,33 +399,152 @@ txtAboutPlatform0 =  dbc.Container([
 
 ])
 
-
-
-
 app.layout = dbc.Container(
     fluid=True,
-    style={"backgroundColor": BG_WHITE},
     className="p-2",
+    style={"backgroundColor": BG_WHITE, "minHeight": "100vh"},
     children=[
-            dbc.Row([
-            dbc.Col([
-                    dbc.Row(dropdownPortfolio),
-                    dbc.Row(dropdownStrategy),
-                    dbc.Row(dropdownSeries),
-                    dbc.Row(html.P(txtAboutPlatform0), style={'fontSize': '16px'}),
-                    ],md=2,className="text-left border p-0"),
-            dbc.Col([
-                    dbc.Row(mainTitle,className="text-center  pb-1", style={'fontSize': '20px'}),
-                    dbc.Row([ dbc.Col(fig1,md=2,className="px-1"), dbc.Col(fig2,md=2,className="px-1"),
-                              dbc.Col(figSeries1,md=2,className="px-1"),
+        # TITLE ROW
+        dbc.Row(
+            dbc.Col(
+                html.H3(
+                    "Analytics Platform",
+                    className="text-center mb-2",
+                    style={"fontSize": "22px", "fontWeight": "600"},
+                ),
+                width=12,
+            ),
+            className="g-0",
+        ),
 
-                    dbc.Row([dbc.Col(scatter3d_1,md=4,className="px-1"),
-                              ], className="g-1"),
-                              ]),
-                     ],md=10,className="text-center border p-3")
-            ])
-])
+        # MAIN 3-COLUMN ROW
+        dbc.Row(
+            [
+                # COLUMN 1 — FILTERS (~15%)
+                dbc.Col(
+                    [
+                        html.Div(
+                            "FILTERS",
+                            style={
+                                "fontSize": "13px",
+                                "fontWeight": "600",
+                                "marginBottom": "8px",
+                            },
+                        ),
+                        dcc.Dropdown(
+                            id="portfolioId1",
+                            options=[{"label": p, "value": p} for p in lstPortfolio],
+                            placeholder="Select Portfolio",
+                            style={"fontSize": "12px"},
+                            multi=True,
+                            className="mb-2",
+                        ),
+                        dcc.Dropdown(
+                            id="strategyId1",
+                            options=[{"label": p, "value": p} for p in lstStrategy],
+                            placeholder="Select Strategy",
+                            style={"fontSize": "12px"},
+                            multi=True,
+                            className="mb-2",
+                        ),
+                        dcc.Dropdown(
+                            id="seriesId1",
+                            options=[{"label": p, "value": p} for p in lSeries],
+                            placeholder="Select Series",
+                            style={"fontSize": "12px"},
+                            multi=True,
+                            className="mb-3",
+                        ),
+                        html.Hr(),
+                        html.Div(
+                            [
+                                html.H5(
+                                    "Technical Challenges",
+                                    id="tipPlatformForAnalytics",
+                                    style={
+                                        "fontSize": "14px",
+                                        "fontWeight": "600",
+                                        "marginBottom": "0",
+                                    },
+                                ),
+                                dbc.Tooltip(
+                                    # ... your tooltip content unchanged ...
+                                    target="tipPlatformForAnalytics",
+                                    placement="right",
+                                    style={
+                                        "--bs-tooltip-bg": "#ffffff",
+                                        "--bs-tooltip-color": "#000000",
+                                        "textAlign": "left",
+                                        "border": "none",
+                                        "boxShadow": "0px 4px 10px rgba(0,0,0,0.1)",
+                                    },
+                                ),
+                            ]
+                        ),
+                    ],
+                    xs=12,
+                    md=2,
+                    style={
+                        "border": "1px solid #ddd",
+                        "borderRadius": "6px",
+                        "padding": "8px",
+                    },
+                ),
 
+                # COLUMN 2 — DONUTS + scatter3d_1 (~35%)
+                dbc.Col(
+                    [
+                        # Row 1: 3 donut charts
+                        dbc.Row(
+                            [
+                                dbc.Col(fig1, md=4, className="px-1"),
+                                dbc.Col(fig2, md=4, className="px-1"),
+                                dbc.Col(figSeries1, md=4, className="px-1"),
+                            ],
+                            className="g-1 mb-2",
+                        ),
+                        # Row 2: 3D chart
+                        dbc.Row(
+                            dbc.Col(scatter3d_1, width=12, className="px-1"),
+                            className="g-0",
+                        ),
+                    ],
+                    xs=12,
+                    md=6,
+                    style={
+                        "border": "1px solid #ddd",
+                        "borderRadius": "6px",
+                        "padding": "5px",
+                    },
+                ),
+
+                # COLUMN 3 — scatter3d_2 only (~50%)
+                dbc.Col([
+                    # dbc.Row([
+                    #     dbc.Col(fig1, md=2, className="px-1"),
+                    #     dbc.Col(fig2, md=2, className="px-1"),
+                    #     dbc.Col(figSeries1, md=2, className="px-1"),
+                    # ]),
+                    # dbc.Row([
+                    #     dbc.Col(fig1, md=2, className="px-1"),
+                    #     dbc.Col(fig2, md=2, className="px-1"),
+                    #     dbc.Col(figSeries1, md=2, className="px-1"),
+                    # ]),
+                ],
+                    xs=12,
+                    md=4,
+                    style={
+                        "border": "1px solid #ddd",
+                        "borderRadius": "6px",
+                        "padding": "5px",
+                    }
+                ),
+            ],
+            className="g-2",
+            align="start",
+        ),
+    ],
+)
 
 ##-------------------------------- Add the callback here -------------------------## Start
 

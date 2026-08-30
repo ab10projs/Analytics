@@ -1,9 +1,12 @@
+####################  import section #################  start
 import polars as pl
 import pandas as pd
 import numpy as np
 import datetime
 import dash
 import plotly
+import plotly.colors as pc
+from click import style
 
 pd.set_option('display.max_columns', None)
 pl.Config.set_fmt_float("full")
@@ -34,6 +37,7 @@ lstStrategy = ['Stochastic', 'bollinger', 'Trend Reversal', 'Parabolic SAR', 'Re
 probabilitiesPortfolio = [0.52, 0.23, 0.15, 0.07, 0.03]
 probabilitiesStrategies = [0.42, 0.18, 0.19, 0.08, 0.13]
 
+####################  import section #################  end
 # #-------------------------------------------  Parquet Data Preperation starts ----------------------
 # exposure = 10000
 # df = pl.read_csv("C:/Anupam/GIT/base/cursorFolder/tools/BhavData/dfMerged.csv")
@@ -115,26 +119,29 @@ app.index_string = '''
 </html>
 '''
 
+####################  section to import parquet and grouped ##################### start
 df = pl.scan_parquet("C:/Anupam/GIT/base/cursorFolder/tools/BhavData/*.parquet")
-print(df.collect().head())
 
-dfPortfolio = df.group_by([pl.col('Portfolio')]).agg(pl.col('profitLoss').sum().alias('pl')).collect()
+qPortfolio = (df.group_by([pl.col('Portfolio')]).agg(pl.col('profitLoss').sum().alias('pl')))
+qStrategy = (df.group_by([pl.col('Strategy')]).agg(pl.col('profitLoss').sum().alias('pl')))
+qSeries = (df.group_by("SERIES").agg(pl.col("profitLoss").sum().alias("pl")).sort("pl", descending=True).head(5))
+qPortStrSer = (df.group_by([pl.col('Portfolio'), pl.col('Strategy'), pl.col('SYMBOL')]
+                            ).agg(pl.col('profitLoss').sum().alias('pl')))
+
+dfPortfolio, dfStrategy, dfSeries, dfPortStrSer = pl.collect_all([qPortfolio,qStrategy,qSeries,qPortStrSer])
+dfPortStrSer = dfPortStrSer.filter( pl.col("pl").is_between(-50000, 50000))
+
 lportfolio = dfPortfolio['Portfolio'].to_list()
 vportfolio = dfPortfolio['pl'].to_list()
-
-dfStrategy = df.group_by([pl.col('Strategy')]).agg(pl.col('profitLoss').sum().alias('pl')).collect()
 lStrategy = dfStrategy['Strategy'].to_list()
 vStrategy = dfStrategy['pl'].to_list()
-
-dfSeries = (df.group_by("SERIES").agg(pl.col("profitLoss").sum().alias("pl")).sort("pl", descending=True).head(5).collect())
 lSeries = dfSeries['SERIES'].to_list()
 vSeries = dfSeries['pl'].to_list()
 
+# print(dfPortfolio.head())
+####################  section to import parquet and grouped ##################### start
 
-# dfPortStrSer = (df.group_by([pl.col('Portfolio'), pl.col('Strategy'), pl.col('SYMBOL'), pl.col('SERIES'), pl.col('DATE1')]).agg(pl.col('profitLoss').sum().alias('pl'))).collect()
-# df = df.filter(pl.col('SERIES')=='EQ')
-dfPortStrSer = (df.group_by([pl.col('Portfolio'), pl.col('Strategy'), pl.col('SYMBOL')]).agg(pl.col('profitLoss').sum().alias('pl'))).collect()
-
+####################### dropdowns ############################### Start
 dropdownPortfolio =  dcc.Dropdown(
         id='portfolioId1',
         options=[{"label": p, "value": p} for p in lstPortfolio],
@@ -156,6 +163,14 @@ dropdownSeries =  dcc.Dropdown(
         style={'fontSize': '12px'},
         multi=True
     ),
+####################### dropdowns ############################### end
+
+###################### pie charts ######################## start
+
+
+
+
+############## fig 1 ############# start
 fig1= dcc.Graph(id='gpPortfolio1',
                                 style={"height": "120px", "width": "100%"},
                                 config={"displayModeBar": False},
@@ -169,9 +184,10 @@ fig1= dcc.Graph(id='gpPortfolio1',
 )]).update_layout(
     margin=dict(l=0, r=0, t=0, b=0)
 ))
+############## fig 1 ############# end
 
-
-fig2= dcc.Graph(id='gpStrategy2',
+############## fig 2 ############# start
+fig2= dcc.Graph(id='gpStrategy1',
                                 style={"height": "120px", "width": "100%"},
                                 config={"displayModeBar": False},
                                 figure=go.Figure(data=[go.Pie(labels=lStrategy, values=vStrategy
@@ -183,73 +199,36 @@ fig2= dcc.Graph(id='gpStrategy2',
                                                  ).update_layout(
                                     margin=dict(l=0, r=0, t=0, b=0)
 ))
+############## fig 2 ############# end
 
-figSeries1= dcc.Graph(id='gpSeries1',
+############## fig 3 ############# start
+fig3= dcc.Graph(id='gpSeries1',
                                 style={"height": "120px", "width": "100%"},
                                 config={"displayModeBar": False},
                                 figure=go.Figure(data=[go.Pie(labels=lSeries, values=vSeries
                                                             , showlegend=False
                                                             , hole=0.5
                                                             , textinfo="percent"
-                                                            # , hovertemplate="<b>%{label}</b>: %{value} (%{percent})<extra></extra>"
                                                             ,  textposition="inside")]).update_layout(
 
                                     margin=dict(l=0, r=0, t=0, b=0)
 ))
+############## fig 3 ############# end
 
 
-#---- 3d
-# 1. Define the 3D Scatter Figure
-fig_3d = go.Figure(
-    data=[
-        go.Scatter3d(
-            # x=[1, 2, 3, 4, 5],  # Replace with your X data
-            # y=[5, 4, 3, 2, 1],  # Replace with your Y data
-            # z=[2, 3, 5, 1, 4],  # Replace with your Z data
-            x = dfPortStrSer['SYMBOL'].to_list(),
-            y = dfPortStrSer['Portfolio'].to_list(),
-            z = dfPortStrSer['pl'].to_list(),
-            mode="markers",
-            marker=dict(
-                size=6,
-                color=[10, 20, 30, 40, 50],  # Sets color based on a variable
-                colorscale="Viridis",  # Choose a color palette
-                opacity=0.8,
-            ),
-        )
-    ]
-)
-
-# 2. Update Layout for Titles and Component Sizing
-fig_3d.update_layout(
-    title=dict(
-        text="My 3D Scatter Plot",
-        y=.85,  # Move title higher up (closer to 1.0 is top edge)
-        x=0.5,
-        xanchor="center",
-        yanchor="top",
-    ),
-    margin=dict(l=0, r=0, b=0, t=40),  # Tight margins to maximize graph area
-    scene=dict(
-        xaxis_title="X Axis Name",
-        yaxis_title="Y Axis Name",
-        zaxis_title="Z Axis Name",
-    ),
-)
+###################### pie charts ######################## end
 
 
 
-# 3. Assign it to your dcc.Graph component
-scatter3d_1 = dcc.Graph(figure=fig_3d, style={"height": "340px", "width": "650px", })
-scatter3d_2 = dcc.Graph(figure=fig_3d, style={"height": "300px", "width": "650px", })
+#################### layout ###################################### start
 
-#---- 3d
-
+### main title ### start
 mainTitle  = html.Div([ html.H3 ('Analytics Platform')],style={"text-align": "center", "width": "100%"})
-# txtAboutPlatform0 = "Technical Challenges"  # txtAboutPlatform0
+### main title ### end
 
+### mouse hover tip ### start
 txtAboutPlatform0 =  dbc.Container([
-    html.H4("Technical Challenges", id="tipPlatformForAnalytics"),
+    html.H6("Technical Challenges", id="tipPlatformForAnalytics"),
     dbc.Tooltip(
         html.Div(
     [
@@ -270,7 +249,7 @@ txtAboutPlatform0 =  dbc.Container([
             ],
             style={
                 "paddingLeft": "18px",
-                "margin": "0",
+                "margin": "5",
                 "fontSize": "14px",
                 "lineHeight": "1.3",
             },
@@ -292,40 +271,40 @@ txtAboutPlatform0 =  dbc.Container([
     ),
 
 ])
+### mouse hover tip ### end
 
 
-
-
-app.layout = dbc.Container(
-    fluid=True,
-    style={"backgroundColor": BG_WHITE},
-    className="p-2",
-    children=[
+app.layout = (dbc.Container
+([
+ mainTitle,
+    dbc.Row([
+      dbc.Col([
+          dbc.Row(dropdownPortfolio),
+          dbc.Row(dropdownStrategy),
+          dbc.Row(dropdownSeries),
+          dbc.Row(txtAboutPlatform0),
+      ], width=2),
+        dbc.Col([
             dbc.Row([
-            dbc.Col([
-                    dbc.Row(dropdownPortfolio),
-                    dbc.Row(dropdownStrategy),
-                    dbc.Row(dropdownSeries),
-                    dbc.Row(html.P(txtAboutPlatform0), style={'fontSize': '16px'}),
-                    ],md=2,className="text-left border p-0"),
-            dbc.Col([
-                    dbc.Row(mainTitle,className="text-center  pb-1", style={'fontSize': '20px'}),
-                    dbc.Row([ dbc.Col(fig1,md=2,className="px-1"), dbc.Col(fig2,md=2,className="px-1"),
-                              dbc.Col(figSeries1,md=2,className="px-1"),
+                dbc.Col([fig1], md=2),
+                dbc.Col([fig2], md=2),
+                dbc.Col([fig3], md=2),
 
-                    dbc.Row([dbc.Col(scatter3d_1,md=4,className="px-1"),
-                              ], className="g-1"),
-                              ]),
-                     ],md=10,className="text-center border p-3")
-            ])
+            ]),
+        ], width=10) # don't change 10
+
+    ])
+
 ])
+)
+#################### layout ###################################### end
+
+################### callback section ################## start
 
 
-##-------------------------------- Add the callback here -------------------------## Start
-
-##-------------------------------- Add the callback here -------------------------## End
-
+################### callback section ################## end
 
 
 if __name__ == "__main__":
     app.run(debug=True)#--------------- Dash App Ends  here --------------------------------
+
