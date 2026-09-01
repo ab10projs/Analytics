@@ -266,31 +266,6 @@ def figUpdate(df):
 df = app.server.df
 piePortfolio,pieStrategy, fig_3d, portfolioSeries, strategySeries, dfPortStraSer = figUpdate(df)
 
-# #########           Layout Section ################### Start
-# app.layout = dbc.Container([
-#     dcc.Graph(id = 'piePortfolio1', figure= piePortfolio ),
-#     dcc.Graph(id = 'pieStrategy1', figure= pieStrategy ),
-#     dcc.Graph(id= 'fig_3did', figure= fig_3d , style={"width": "100%", "height": "600px"}),
-#     dcc.Dropdown(
-#         id='ddPortfolio',
-#         options=[{"label": p, "value": p} for p in portfolioSeries],
-#         placeholder="Select Portfolio Name",
-#         multi=True
-#     ),
-#     dcc.Dropdown(
-#         id='ddStrategy',
-#         options=[{"label": p, "value": p} for p in strategySeries],
-#         placeholder="Select Strategy Name",
-#         multi=True
-#     ),
-#     dcc.Dropdown(
-#         id='ddSeries',
-#         options=[{"label": p, "value": p} for p in dfPortStraSer.select(pl.col('SERIES')).unique().to_series().sort()],
-#         placeholder="Select Series Name",
-#         multi=True
-#     ),
-# ])
-# #########           Layout Section ################### End
 
 ####  --- New layout section -------------- ##### Start
 app.layout = dbc.Container(
@@ -388,7 +363,7 @@ app.layout = dbc.Container(
                                     id="piePortfolio1",
                                     figure=piePortfolio,
                                     style={
-                                        "width": "40%",
+                                        "width": "30%",
                                         "height": "180px"
                                     },
                                     config={
@@ -399,7 +374,7 @@ app.layout = dbc.Container(
                                     id="pieStrategy1",
                                     figure=pieStrategy,
                                     style={
-                                        "width": "40%",
+                                        "width": "30%",
                                         "height": "180px"
                                     },
                                     config={
@@ -412,22 +387,21 @@ app.layout = dbc.Container(
                                 className="border p-0",
 
                             ),
+                            # =========================================================
+                            # 3D SCATTER CHART - ROW BELOW
+                            # =========================================================
+                            dcc.Graph(
+                                id="fig_3did",
+                                figure=fig_3d,
+                                style={
+                                    "width": "45%",
+                                    "height": "350px"
+                                },
+                                config={
+                                    "displayModeBar": False
+                                },
+                            )
 
-                            # dbc.Col(
-                            #     dcc.Graph(
-                            #         id="pieStrategy1",
-                            #         figure=pieStrategy,
-                            #         style={
-                            #             "width": "100%",
-                            #             "height": "180px"
-                            #         },
-                            #         config={
-                            #             "displayModeBar": False
-                            #         },
-                            #     ),
-                            #     width=6,
-                            #     className="border p-0",
-                            # ),
                         ],
                         className="g-0",
                     ),
@@ -441,28 +415,16 @@ app.layout = dbc.Container(
                 "padding": "0",
             },
         ),
-        # =========================================================
-        # 3D SCATTER CHART - ROW BELOW
-        # =========================================================
         dbc.Row(
-            dbc.Col(
-                dcc.Graph(
-                    id="fig_3did",
-                    figure=fig_3d,
-                    style={
-                        "width": "100%",
-                        "height": "350px"
-                    },
-                    config={
-                        "displayModeBar": False
-                    },
-                ),
-                width=9,
-            ),
-            className="g-0 border",
-        ),
-
-
+            [
+                html.H3("rowNew")
+            ],
+            className="border p-1",
+            style={
+                "margin": "0",
+                "padding": "0",
+            },
+        )
     ]
 )
 
@@ -890,17 +852,24 @@ def updateScatter(
 
         # Overall figure background
         paper_bgcolor="white",
+        plot_bgcolor="white",  # 2D plotting area
 
         # 3D plotting area
         scene=dict(
             xaxis=dict(
                 title="Portfolio",
+                backgroundcolor="white",
+                showbackground=False,
             ),
             yaxis=dict(
                 title="Series",
+                backgroundcolor="white",
+                showbackground=False,
             ),
             zaxis=dict(
                 title="Profit/Loss",
+                # backgroundcolor="white",
+                # showbackground=False,
             ),
 
             # 3D scene background
