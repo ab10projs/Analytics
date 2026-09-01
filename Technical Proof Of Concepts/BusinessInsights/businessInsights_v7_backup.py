@@ -284,7 +284,7 @@ app.layout = dbc.Container([
     dcc.Dropdown(
         id='ddSeries',
         options=[{"label": p, "value": p} for p in dfPortStraSer.select(pl.col('SERIES')).unique().to_series().sort()],
-        placeholder="Select Strategy Name",
+        placeholder="Select Series Name",
         multi=True
     ),
 ])
@@ -506,6 +506,7 @@ def updatePortfolioPie(
     )
 
     print(dfFiltered.collect().head())
+    print(dfFiltered.select(pl.col('profitLoss')).sum().collect())
 
     dfPie = (
         dfFiltered
@@ -671,8 +672,8 @@ def updateScatter(
             marker=dict(
                 size=pl_abs,
                 sizemode="area",
-                sizeref=2 * max(pl_abs) / (20 ** 2),
-                sizemin=4,
+                sizeref=2 * 14000 / (20 ** 2),
+                sizemin= 4,
                 color=color_values,
                 colorscale="Viridis",
                 cmin=0,

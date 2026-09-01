@@ -113,6 +113,7 @@ app.index_string = '''
 '''
 
 app.server.df = pl.scan_parquet("C:/Anupam/GIT/base/cursorFolder/tools/BhavData/*.parquet")
+
 print(app.server.df.collect_schema().names())
 
 # --------------------  function to update figures ------------------------- start
@@ -162,10 +163,10 @@ def figUpdate(df):
                     y=1,  # push title down a bit
                     yanchor="top",
                 ),
-                margin=dict(t=35, b=10, l=10, r=10),
+                margin=dict(t=5, b=5, l=5, r=5),
                 showlegend=False,
-                width=200,  # figure width
-                height=200  # figure height
+                width=150,  # figure width
+                height=150  # figure height
             )
         )
     #------------------------- Portfolio Pie Fig ------------------------# End
@@ -184,10 +185,10 @@ def figUpdate(df):
                     y=1,  # push title down a bit
                     yanchor="top",
                 ),
-                margin=dict(t=35, b=10, l=10, r=10),
+                margin=dict(t=5, b=5, l=5, r=5),
                 showlegend=False,
-                width=200,  # figure width
-                height=200  # figure height
+                width=150,  # figure width
+                height=150  # figure height
             )
         )
     #------------------------- Strategy Pie Fig ------------------------# End
@@ -254,7 +255,8 @@ def figUpdate(df):
             xaxis=dict(title="Portfolio"),
             yaxis=dict(title="Series"),
             zaxis=dict(title="Profit/Loss")
-        )
+        ),
+        margin=dict(l=0, r=0, t=0, b=0)
     )
     # #############  3 d Scatter ############# End
     return piePortfolio, pieStrategy, fig_3d, portfolioSeries, strategySeries, dfPortStraSer
@@ -264,31 +266,207 @@ def figUpdate(df):
 df = app.server.df
 piePortfolio,pieStrategy, fig_3d, portfolioSeries, strategySeries, dfPortStraSer = figUpdate(df)
 
-#########           Layout Section ################### Start
-app.layout = dbc.Container([
-    dcc.Graph(id = 'piePortfolio1', figure= piePortfolio ),
-    dcc.Graph(id = 'pieStrategy1', figure= pieStrategy ),
-    dcc.Graph(id= 'fig_3did', figure= fig_3d , style={"width": "100%", "height": "600px"}),
-    dcc.Dropdown(
-        id='ddPortfolio',
-        options=[{"label": p, "value": p} for p in portfolioSeries],
-        placeholder="Select Portfolio Name",
-        multi=True
-    ),
-    dcc.Dropdown(
-        id='ddStrategy',
-        options=[{"label": p, "value": p} for p in strategySeries],
-        placeholder="Select Strategy Name",
-        multi=True
-    ),
-    dcc.Dropdown(
-        id='ddSeries',
-        options=[{"label": p, "value": p} for p in dfPortStraSer.select(pl.col('SERIES')).unique().to_series().sort()],
-        placeholder="Select Strategy Name",
-        multi=True
-    ),
-])
-#########           Layout Section ################### End
+# #########           Layout Section ################### Start
+# app.layout = dbc.Container([
+#     dcc.Graph(id = 'piePortfolio1', figure= piePortfolio ),
+#     dcc.Graph(id = 'pieStrategy1', figure= pieStrategy ),
+#     dcc.Graph(id= 'fig_3did', figure= fig_3d , style={"width": "100%", "height": "600px"}),
+#     dcc.Dropdown(
+#         id='ddPortfolio',
+#         options=[{"label": p, "value": p} for p in portfolioSeries],
+#         placeholder="Select Portfolio Name",
+#         multi=True
+#     ),
+#     dcc.Dropdown(
+#         id='ddStrategy',
+#         options=[{"label": p, "value": p} for p in strategySeries],
+#         placeholder="Select Strategy Name",
+#         multi=True
+#     ),
+#     dcc.Dropdown(
+#         id='ddSeries',
+#         options=[{"label": p, "value": p} for p in dfPortStraSer.select(pl.col('SERIES')).unique().to_series().sort()],
+#         placeholder="Select Series Name",
+#         multi=True
+#     ),
+# ])
+# #########           Layout Section ################### End
+
+####  --- New layout section -------------- ##### Start
+app.layout = dbc.Container(
+    fluid=True,
+    className="p-2",
+    style={
+        "backgroundColor": BG_WHITE,
+        "minHeight": "100vh"
+    },
+    children=[
+
+        dbc.Row(
+            dbc.Col(
+                html.H3(
+                    "Analytics Platform",
+                    className="text-center mb-2",
+                    style={
+                        "fontSize": "32px",
+                        "fontWeight": "600"
+                    },
+                ),
+                width=12,
+            ),
+            className="g-0",
+        ),
+
+        # =========================================================
+        # FILTERS + DONUT CHARTS
+        # =========================================================
+        dbc.Row(
+            [
+                # =========================
+                # FILTER COLUMN
+                # =========================
+                dbc.Col(
+                    [
+                        html.H3(
+                            "Filters",
+                            className="text-center mb-1",
+                            style={
+                                "fontSize": "24px",
+                                "fontWeight": "600"
+                            },
+                        ),
+
+                        dcc.Dropdown(
+                            id="ddPortfolio",
+                            options=[
+                                {"label": p, "value": p}
+                                for p in portfolioSeries
+                            ],
+                            placeholder="Select Portfolio Name",
+                            multi=True,
+                        ),
+
+                        dcc.Dropdown(
+                            id="ddStrategy",
+                            options=[
+                                {"label": p, "value": p}
+                                for p in strategySeries
+                            ],
+                            placeholder="Select Strategy Name",
+                            multi=True,
+                        ),
+
+                        dcc.Dropdown(
+                            id="ddSeries",
+                            options=[
+                                {"label": p, "value": p}
+                                for p in
+                                dfPortStraSer
+                                .select(pl.col("SERIES"))
+                                .unique()
+                                .to_series()
+                                .sort()
+                            ],
+                            placeholder="Select Series Name",
+                            multi=True,
+                        ),
+                    ],
+                    width=3,
+                    className="border p-1",
+                ),
+
+                # =========================
+                # DONUT COLUMN
+                # =========================
+                dbc.Col(
+                    dbc.Row(
+                        [
+                            dbc.Col(
+                                [
+                                    dbc.Row([
+                                dcc.Graph(
+                                    id="piePortfolio1",
+                                    figure=piePortfolio,
+                                    style={
+                                        "width": "40%",
+                                        "height": "180px"
+                                    },
+                                    config={
+                                        "displayModeBar": False
+                                    },
+                                ),
+                                dcc.Graph(
+                                    id="pieStrategy1",
+                                    figure=pieStrategy,
+                                    style={
+                                        "width": "40%",
+                                        "height": "180px"
+                                    },
+                                    config={
+                                        "displayModeBar": False
+                                    },
+                                ),
+                                ])
+                                ],
+                                width=6,
+                                className="border p-0",
+
+                            ),
+
+                            # dbc.Col(
+                            #     dcc.Graph(
+                            #         id="pieStrategy1",
+                            #         figure=pieStrategy,
+                            #         style={
+                            #             "width": "100%",
+                            #             "height": "180px"
+                            #         },
+                            #         config={
+                            #             "displayModeBar": False
+                            #         },
+                            #     ),
+                            #     width=6,
+                            #     className="border p-0",
+                            # ),
+                        ],
+                        className="g-0",
+                    ),
+                    width=9,
+                    className="border p-0",
+                ),
+            ],
+            className="g-0",
+            style={
+                "margin": "0",
+                "padding": "0",
+            },
+        ),
+        # =========================================================
+        # 3D SCATTER CHART - ROW BELOW
+        # =========================================================
+        dbc.Row(
+            dbc.Col(
+                dcc.Graph(
+                    id="fig_3did",
+                    figure=fig_3d,
+                    style={
+                        "width": "100%",
+                        "height": "350px"
+                    },
+                    config={
+                        "displayModeBar": False
+                    },
+                ),
+                width=9,
+            ),
+            className="g-0 border",
+        ),
+
+
+    ]
+)
+
+####  --- New layout section -------------- ##### End
 
 ##-------------- common FILTER function ------------------- ## Start
 def get_filtered_df(portfolioName, strategyName, seriesName):
@@ -506,6 +684,7 @@ def updatePortfolioPie(
     )
 
     print(dfFiltered.collect().head())
+    print(dfFiltered.select(pl.col('profitLoss')).sum().collect())
 
     dfPie = (
         dfFiltered
@@ -671,7 +850,7 @@ def updateScatter(
             marker=dict(
                 size=pl_abs,
                 sizemode="area",
-                sizeref=2 * max(pl_abs) / (20 ** 2),
+                sizeref=2 * 14000 / (20 ** 2),
                 sizemin= 4,
                 color=color_values,
                 colorscale="Viridis",
@@ -694,19 +873,41 @@ def updateScatter(
             )
         )
     )
-
     fig_3d.update_layout(
         title=dict(
             text="Portfolio Strategy Series",
             x=0.5,
             xanchor="center"
         ),
+
+        # Reduce outer margins
+        margin=dict(
+            l=0,
+            r=0,
+            t=0,
+            b=0
+        ),
+
+        # Overall figure background
+        paper_bgcolor="white",
+
+        # 3D plotting area
         scene=dict(
-            xaxis=dict(title="Portfolio"),
-            yaxis=dict(title="Series"),
-            zaxis=dict(title="Profit/Loss")
+            xaxis=dict(
+                title="Portfolio",
+            ),
+            yaxis=dict(
+                title="Series",
+            ),
+            zaxis=dict(
+                title="Profit/Loss",
+            ),
+
+            # 3D scene background
+            bgcolor="white"
         )
     )
+
     return fig_3d
     # #############  3 d Scatter ############# End
 
