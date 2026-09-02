@@ -149,49 +149,51 @@ def figUpdate(df):
     strategyPLSeries = dfStrategyPl.select(pl.col('profitLoss')).to_series()
     seriesSeries = dfPortStraSer.select(pl.col('SERIES')).to_series()
 
-    #------------------------- Portfolio Pie Fig ------------------------# Start
-    piePortfolio = go.Figure(
-            data=[go.Pie(labels=portfolioSeries, values= portfolioPLSeries,
-                         textinfo="value", textposition="inside", insidetextorientation="radial",
-                         marker=dict(colors=['green', 'red']))],
-            layout=go.Layout(
-                title=dict(
-                    text="Profit Loss",
-                    font=dict(size=18),
-                    x=0.5,  # center
-                    xanchor="center",
-                    y=1,  # push title down a bit
-                    yanchor="top",
-                ),
-                margin=dict(t=5, b=5, l=5, r=5),
-                showlegend=False,
-                width=150,  # figure width
-                height=150  # figure height
-            )
-        )
-    #------------------------- Portfolio Pie Fig ------------------------# End
+    # #------------------------- Portfolio Pie Fig ------------------------# Start
+    piePortfolio = go.Figure()
+    # piePortfolio = go.Figure(
+    #         data=[go.Pie(labels=portfolioSeries, values= portfolioPLSeries,
+    #                      textinfo="value", textposition="inside", insidetextorientation="radial",
+    #                      marker=dict(colors=['green', 'red']))],
+    #         layout=go.Layout(
+    #             title=dict(
+    #                 text="Profit Loss",
+    #                 font=dict(size=18),
+    #                 x=0.5,  # center
+    #                 xanchor="center",
+    #                 y=1,  # push title down a bit
+    #                 yanchor="top",
+    #             ),
+    #             margin=dict(t=5, b=5, l=5, r=5),
+    #             showlegend=False,
+    #             width=150,  # figure width
+    #             height=150  # figure height
+    #         )
+    #     )
+    # #------------------------- Portfolio Pie Fig ------------------------# End
 
-    #------------------------- Strategy Pie Fig ------------------------# Start
-    pieStrategy = go.Figure(
-            data=[go.Pie(labels=strategySeries, values= strategyPLSeries,
-                         textinfo="value", textposition="inside", insidetextorientation="radial",
-                         marker=dict(colors=['green', 'red']))],
-            layout=go.Layout(
-                title=dict(
-                    text="Profit Loss",
-                    font=dict(size=18),
-                    x=0.5,  # center
-                    xanchor="center",
-                    y=1,  # push title down a bit
-                    yanchor="top",
-                ),
-                margin=dict(t=5, b=5, l=5, r=5),
-                showlegend=False,
-                width=150,  # figure width
-                height=150  # figure height
-            )
-        )
-    #------------------------- Strategy Pie Fig ------------------------# End
+    # #------------------------- Strategy Pie Fig ------------------------# Start
+    pieStrategy = go.Figure()
+    # pieStrategy = go.Figure(
+    #         data=[go.Pie(labels=strategySeries, values= strategyPLSeries,
+    #                      textinfo="value", textposition="inside", insidetextorientation="radial",
+    #                      marker=dict(colors=['green', 'red']))],
+    #         layout=go.Layout(
+    #             title=dict(
+    #                 text="Profit Loss",
+    #                 font=dict(size=18),
+    #                 x=0.5,  # center
+    #                 xanchor="center",
+    #                 y=1,  # push title down a bit
+    #                 yanchor="top",
+    #             ),
+    #             margin=dict(t=5, b=5, l=5, r=5),
+    #             showlegend=False,
+    #             width=150,  # figure width
+    #             height=150  # figure height
+    #         )
+    #     )
+    # #------------------------- Strategy Pie Fig ------------------------# End
 
 
     ##############  pie charts ###################### end
