@@ -419,7 +419,18 @@ app.layout = dbc.Container(
         ),
         dbc.Row(
             [
-                html.H3("rowNew")
+                dbc.Col([html.H3("rowCol1"),
+                         dcc.Graph(
+                             id="gpMultiLine",
+                             config={"displayModeBar": False},
+                             style={
+                                 "height": "350px",
+                                 "width": "100%"
+                             }
+                         )
+                         ],className="border p-1",),
+                dbc.Col([html.H3("rowCol2")],className="border p-1",),
+
             ],
             className="border p-1",
             style={
@@ -885,6 +896,93 @@ def updateScatter(
 
 ## ----------------- 3d Scatter ----------------- End
 
+
+## --------------------Multiline -------------------## Start
+@app.callback(
+    Output("gpMultiLine", "figure"),
+    Input("fig_3did", "clickData")
+)
+def update_multiline(clickData):
+
+    fig = go.Figure()
+
+    if not clickData:
+        fig.update_layout(
+            title="Click a point on the 3D chart"
+        )
+        return fig
+
+    print(clickData)
+    print(clickData['points'][0]['y'])
+
+
+    series    = clickData['points'][0]['y']
+
+    print( series)
+
+    # Filter original LazyFrame
+    q_click = (
+        app.server.df
+        .filter(
+
+            (pl.col("SERIES") == series)
+        )
+    )
+
+    df_click = q_click.collect()
+
+    if df_click.is_empty():
+        return fig
+
+    # Create one line for each symbol
+    symbols = df_click["SYMBOL"].unique().to_list()
+
+    for symbol in symbols:
+
+        df_symbol = (
+            df_click
+            .filter(pl.col("SYMBOL") == symbol)
+            .sort("DATE1")
+        )
+
+        fig.add_trace(
+            go.Scatter(
+                x=df_symbol["DATE1"].to_list(),
+                y=df_symbol["profitLoss"].to_list(),
+                mode="markers",
+                name=symbol
+            )
+        )
+
+    fig.update_layout(
+        title=dict(
+            text=f" {series}",
+            x=0.5
+        ),
+
+        xaxis=dict(
+            title="Date"
+        ),
+
+        yaxis=dict(
+            title="Profit / Loss"
+        ),
+
+        paper_bgcolor="white",
+        plot_bgcolor="white",
+
+        margin=dict(
+            l=40,
+            r=20,
+            t=50,
+            b=40
+        ),
+
+        hovermode="x unified"
+    )
+
+    return fig
+## --------------------Multiline -------------------## End
 
 ###########################  callbacks ##########################  end
 
