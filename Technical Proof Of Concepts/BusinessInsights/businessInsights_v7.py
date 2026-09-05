@@ -383,6 +383,14 @@ app.layout = dbc.Container(
                                         "displayModeBar": False
                                     },
                                 ),
+                                dcc.Graph(
+                                         id="gpMultiLine",
+                                         config={"displayModeBar": False},
+                                         style={
+                                             "height": "350px",
+                                             "width": "100%"
+                                         }
+                                     ),
                                 ])
                                 ],
                                 width=6,
@@ -420,14 +428,14 @@ app.layout = dbc.Container(
         dbc.Row(
             [
                 dbc.Col([html.H3("rowCol1"),
-                         dcc.Graph(
-                             id="gpMultiLine",
-                             config={"displayModeBar": False},
-                             style={
-                                 "height": "350px",
-                                 "width": "100%"
-                             }
-                         )
+                         # dcc.Graph(
+                         #     id="gpMultiLine",
+                         #     config={"displayModeBar": False},
+                         #     style={
+                         #         "height": "350px",
+                         #         "width": "100%"
+                         #     }
+                         # )
                          ],className="border p-1",),
                 dbc.Col([html.H3("rowCol2")],className="border p-1",),
 
@@ -950,7 +958,11 @@ def update_multiline(clickData):
                 x=df_symbol["DATE1"].to_list(),
                 y=df_symbol["profitLoss"].to_list(),
                 mode="markers",
-                name=symbol
+                marker = dict(
+                    opacity=.8,
+                    size = 2,
+                ),
+
             )
         )
 
