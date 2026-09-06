@@ -1,22 +1,13 @@
 import polars as pl
 import pandas as pd
-import numpy as np
-import datetime
-import dash
 
-import plotly
-import plotly.colors as pc
-from click import style
-from numpy.ma.core import outer
+import dash
 
 pd.set_option('display.max_columns', None)
 pl.Config.set_fmt_float("full")
 from dash import html, dcc
 import dash_bootstrap_components as dbc
 import plotly.graph_objects as go
-import pandas as pd
-from datetime import date
-from datetime import datetime
 from dash import dcc, html, Input, Output, State, ctx
 import polars as pl
 
@@ -144,58 +135,16 @@ def figUpdate(df):
     ##############  pie charts ###################### start
 
     portfolioSeries = dfPortfolioPl.select(pl.col('Portfolio')).to_series()
-    portfolioPLSeries = dfPortfolioPl.select(pl.col('profitLoss')).to_series()
     strategySeries = dfStrategyPl.select(pl.col('Strategy')).to_series()
-    strategyPLSeries = dfStrategyPl.select(pl.col('profitLoss')).to_series()
-    seriesSeries = dfPortStraSer.select(pl.col('SERIES')).to_series()
+
 
     # #------------------------- Portfolio Pie Fig ------------------------# Start
     piePortfolio = go.Figure()
-    # piePortfolio = go.Figure(
-    #         data=[go.Pie(labels=portfolioSeries, values= portfolioPLSeries,
-    #                      textinfo="value", textposition="inside", insidetextorientation="radial",
-    #                      marker=dict(colors=['green', 'red']))],
-    #         layout=go.Layout(
-    #             title=dict(
-    #                 text="Profit Loss",
-    #                 font=dict(size=18),
-    #                 x=0.5,  # center
-    #                 xanchor="center",
-    #                 y=1,  # push title down a bit
-    #                 yanchor="top",
-    #             ),
-    #             margin=dict(t=5, b=5, l=5, r=5),
-    #             showlegend=False,
-    #             width=150,  # figure width
-    #             height=150  # figure height
-    #         )
-    #     )
     # #------------------------- Portfolio Pie Fig ------------------------# End
 
     # #------------------------- Strategy Pie Fig ------------------------# Start
     pieStrategy = go.Figure()
-    # pieStrategy = go.Figure(
-    #         data=[go.Pie(labels=strategySeries, values= strategyPLSeries,
-    #                      textinfo="value", textposition="inside", insidetextorientation="radial",
-    #                      marker=dict(colors=['green', 'red']))],
-    #         layout=go.Layout(
-    #             title=dict(
-    #                 text="Profit Loss",
-    #                 font=dict(size=18),
-    #                 x=0.5,  # center
-    #                 xanchor="center",
-    #                 y=1,  # push title down a bit
-    #                 yanchor="top",
-    #             ),
-    #             margin=dict(t=5, b=5, l=5, r=5),
-    #             showlegend=False,
-    #             width=150,  # figure width
-    #             height=150  # figure height
-    #         )
-    #     )
     # #------------------------- Strategy Pie Fig ------------------------# End
-
-
     ##############  pie charts ###################### end
 
 
@@ -349,7 +298,8 @@ app.layout = dbc.Container(
                         ),
                     ],
                     width=3,
-                    className="border p-1",
+                    # className="border p-1",
+                    # className="border",
                 ),
 
                 # =========================
@@ -366,7 +316,7 @@ app.layout = dbc.Container(
                                     figure=piePortfolio,
                                     style={
                                         "width": "30%",
-                                        "height": "180px"
+                                        "height": "150px"
                                     },
                                     config={
                                         "displayModeBar": False
@@ -377,7 +327,18 @@ app.layout = dbc.Container(
                                     figure=pieStrategy,
                                     style={
                                         "width": "30%",
-                                        "height": "180px"
+                                        "height": "150px"
+                                    },
+                                    config={
+                                        "displayModeBar": False
+                                    },
+                                ),
+                                dcc.Graph(
+                                    id="barStrategy1",
+                                    figure=pieStrategy,
+                                    style={
+                                        "width": "30%",
+                                        "height": "115px"
                                     },
                                     config={
                                         "displayModeBar": False
@@ -394,7 +355,7 @@ app.layout = dbc.Container(
                                 ])
                                 ],
                                 width=6,
-                                className="border p-0",
+                                # className="border p-0",
 
                             ),
                             # =========================================================
@@ -416,7 +377,7 @@ app.layout = dbc.Container(
                         className="g-0",
                     ),
                     width=9,
-                    className="border p-0",
+                    # className="border p-0",
                 ),
             ],
             className="g-0",
@@ -428,19 +389,17 @@ app.layout = dbc.Container(
         dbc.Row(
             [
                 dbc.Col([html.H3("rowCol1"),
-                         # dcc.Graph(
-                         #     id="gpMultiLine",
-                         #     config={"displayModeBar": False},
-                         #     style={
-                         #         "height": "350px",
-                         #         "width": "100%"
-                         #     }
-                         # )
-                         ],className="border p-1",),
-                dbc.Col([html.H3("rowCol2")],className="border p-1",),
+                         ]
+                        # ,className="border p-1",
+                        ),
+                dbc.Col([html.H3("rowCol2")],
+                        # className="border p-1",
+                        # className="border",
+                        ),
 
             ],
-            className="border p-1",
+            # className="border p-1",
+            # className="border",
             style={
                 "margin": "0",
                 "padding": "0",
@@ -767,6 +726,79 @@ def updateStrategyPie(
 
     return fig
 ## ------------------ callback for strategy pie chart -----------------## End
+
+
+## ------------------ callback for Third chart -----------------## Start
+@app.callback(
+    Output("barStrategy1", "figure"),
+    Input("ddPortfolio", "value"),
+    Input("ddStrategy", "value"),
+    Input("ddSeries", "value"),
+)
+def updateStrategyBar(
+    portfolioName,
+    strategyName,
+    seriesName
+):
+
+    dfFiltered = get_filtered_df(
+        portfolioName,
+        strategyName,
+        seriesName
+    )
+
+    dfBar = (
+        dfFiltered
+        .group_by("Strategy")
+        .agg(
+            pl.col("profitLoss")
+            .sum()
+            .alias("pl")
+        )
+        .sort("pl", descending=True)
+        .collect()
+    )
+
+    if dfBar.height == 0:
+        return go.Figure()
+
+    fig = go.Figure(
+        data=[
+            go.Bar(
+                x=dfBar["Strategy"].to_list(),
+                y=dfBar["pl"].to_list(),
+                hovertemplate=(
+                    "<b>%{x}</b><br>"
+                    "P/L: %{y:,.2f}"
+                    "<extra></extra>"
+                )
+            )
+        ]
+    )
+
+    fig.update_layout(
+        margin=dict(l=10, r=10, t=10, b=10),
+        paper_bgcolor="white",
+        plot_bgcolor="white",
+        showlegend=False,
+        xaxis=dict(
+            showticklabels=False,
+            title=None
+        ),
+
+        yaxis=dict(
+            showticklabels=False,
+            title=None
+        )
+    )
+
+    fig.update_layout(
+        showlegend=False,
+        margin=dict(l=5, r=5, t=5, b=5)
+    )
+
+    return fig
+## ------------------ callback for 3rd Chart  chart -----------------## End
 
 ## ----------------- 3d Scatter ----------------- Start
 @app.callback(
