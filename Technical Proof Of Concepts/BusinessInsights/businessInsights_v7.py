@@ -107,6 +107,55 @@ app.server.df = pl.scan_parquet("C:/Anupam/GIT/base/cursorFolder/tools/BhavData/
 
 print(app.server.df.collect_schema().names())
 
+
+### mouse hover tip ### start
+txtTechnicalChallenges =  dbc.Container([
+    html.H5("Technical Challenges", id="tipTechnicalChallenges"),
+    dbc.Tooltip(
+        html.Div(
+    [
+        html.B("Common Issues", style={"fontSize": "16px"}),
+        html.Hr(style={"margin": "4px 0"}),
+        html.Ul(
+            [
+                html.Div("1. Slow response"),
+                html.Div("2. Drill-down and drill-through are slow"),
+                html.Div("3. Filters freeze"),
+                html.Div("4. Reports time out"),
+                html.Div("5. Business calculations become difficult"),
+                html.Div("6.Performance degrades quickly"),
+                html.Div("7. Lacks flexibility"),
+                html.Div("8. Limited custom algorithms"),
+                html.Div("9. Cost escalation"),
+                html.Div("10. Limited interactivity"),
+            ],
+            style={
+                "paddingLeft": "18px",
+                "margin": "5",
+                "fontSize": "14px",
+                "lineHeight": "1.3",
+            },
+        ),
+            ],
+            style={"text-align": "left", "width": "100%"}
+        ),
+        "Black text on a white background with no borders!",
+        target="tipTechnicalChallenges",
+        placement="bottom",
+        # This style block overrides Bootstrap 5 CSS variables directly
+        style={
+            "--bs-tooltip-bg": "#ffffff",  # Sets background to white
+            "--bs-tooltip-color": "#000000",  # Sets text to black
+            "text-align": "left",
+            "border": "none",  # Removes any outer border
+            "box-shadow": "0px 4px 10px rgba(0,0,0,0.1)",  # Optional soft shadow for visibility
+        },
+    ),
+
+])
+### mouse hover tip ### end
+
+
 # --------------------  function to update figures ------------------------- start
 def figUpdate(df):
     # dfPortfolioPl = app.server.df.select(pl.col(['Portfolio', 'profitLoss'])).group_by(
@@ -253,14 +302,7 @@ app.layout = dbc.Container(
                 # =========================
                 dbc.Col(
                     [
-                        html.H3(
-                            "Filters",
-                            className="text-center mb-1",
-                            style={
-                                "fontSize": "24px",
-                                "fontWeight": "600"
-                            },
-                        ),
+
 
                         dcc.Dropdown(
                             id="ddPortfolio",
@@ -295,6 +337,9 @@ app.layout = dbc.Container(
                             ],
                             placeholder="Select Series Name",
                             multi=True,
+                        ),
+                        html.H3(
+                            txtTechnicalChallenges,
                         ),
                     ],
                     width=3,
@@ -346,10 +391,18 @@ app.layout = dbc.Container(
                                 ),
                                 dcc.Graph(
                                          id="gpMultiLine",
+                                         figure= go.Figure(
+                                             layout=dict(
+                                                 paper_bgcolor="white",
+                                                 plot_bgcolor="white",
+                                                 margin=dict(l=10, r=10, t=10, b=10),
+                                             )
+                                         ),
                                          config={"displayModeBar": False},
                                          style={
                                              "height": "350px",
-                                             "width": "100%"
+                                             "width": "100%",
+                                             "backgroundColor": "white",
                                          }
                                      ),
                                 ])
@@ -388,11 +441,11 @@ app.layout = dbc.Container(
         ),
         dbc.Row(
             [
-                dbc.Col([html.H3("rowCol1"),
+                dbc.Col([html.H3(" ---- "),
                          ]
                         # ,className="border p-1",
                         ),
-                dbc.Col([html.H3("rowCol2")],
+                dbc.Col([html.H3(" ------ ")],
                         # className="border p-1",
                         # className="border",
                         ),
@@ -948,7 +1001,7 @@ def update_multiline(clickData):
 
     if not clickData:
         fig.update_layout(
-            title="Click a point on the 3D chart"
+            # title="Click a point on the 3D chart"
         )
         return fig
 
@@ -990,6 +1043,7 @@ def update_multiline(clickData):
                 x=df_symbol["DATE1"].to_list(),
                 y=df_symbol["profitLoss"].to_list(),
                 mode="markers",
+                name= "",
                 marker = dict(
                     opacity=.8,
                     size = 2,
