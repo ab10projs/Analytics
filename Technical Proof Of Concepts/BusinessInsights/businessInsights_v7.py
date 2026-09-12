@@ -5,7 +5,7 @@ import dash
 
 pd.set_option('display.max_columns', None)
 pl.Config.set_fmt_float("full")
-from dash import html, dcc
+from dash import html, dcc, Dash
 import dash_bootstrap_components as dbc
 import plotly.graph_objects as go
 from dash import dcc, html, Input, Output, State, ctx
@@ -76,85 +76,10 @@ probabilitiesStrategies = [0.42, 0.18, 0.19, 0.08, 0.13]
 # dfFiltered.write_parquet("C:/Anupam/GIT/base/cursorFolder/tools/BhavData/dfYear23.parquet")
 # #-------------------------------------------  Parquet Data Preperation done here ----------------------
 
-#--------------- Dash App Starts here --------------------------------
-BG_WHITE = "#ffffff"
-TEXT_BLACK = "#000000"
-GRID_GREY = "#e6e6e6"
+###################################### Process ####################################### start
 
-app = dash.Dash(__name__,external_stylesheets=[dbc.themes.BOOTSTRAP])
-
-app.index_string = '''
-<!DOCTYPE html>
-<html>
-    <head>
-        {%metas%}
-        <title> </title>   <!-- force empty title -->
-        {%css%}
-        <link rel="icon" href="data:;base64,iVBORw0KGgo="> <!-- blank favicon -->
-    </head>
-    <body>
-        {%app_entry%}
-        <footer>
-            {%config%}
-            {%scripts%}
-            {%renderer%}
-        </footer>
-    </body>
-</html>
-'''
-
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 app.server.df = pl.scan_parquet("C:/Anupam/GIT/base/cursorFolder/tools/BhavData/*.parquet")
-
-print(app.server.df.collect_schema().names())
-
-
-### mouse hover tip ### start
-txtTechnicalChallenges =  dbc.Container([
-    html.H5("Technical Challenges", id="tipTechnicalChallenges"),
-    dbc.Tooltip(
-        html.Div(
-    [
-        html.B("Common Issues", style={"fontSize": "16px"}),
-        html.Hr(style={"margin": "4px 0"}),
-        html.Ul(
-            [
-                html.Div("1. Slow response"),
-                html.Div("2. Drill-down and drill-through are slow"),
-                html.Div("3. Filters freeze"),
-                html.Div("4. Reports time out"),
-                html.Div("5. Business calculations become difficult"),
-                html.Div("6.Performance degrades quickly"),
-                html.Div("7. Lacks flexibility"),
-                html.Div("8. Limited custom algorithms"),
-                html.Div("9. Cost escalation"),
-                html.Div("10. Limited interactivity"),
-            ],
-            style={
-                "paddingLeft": "18px",
-                "margin": "5",
-                "fontSize": "14px",
-                "lineHeight": "1.3",
-            },
-        ),
-            ],
-            style={"text-align": "left", "width": "100%"}
-        ),
-        "Black text on a white background with no borders!",
-        target="tipTechnicalChallenges",
-        placement="bottom",
-        # This style block overrides Bootstrap 5 CSS variables directly
-        style={
-            "--bs-tooltip-bg": "#ffffff",  # Sets background to white
-            "--bs-tooltip-color": "#000000",  # Sets text to black
-            "text-align": "left",
-            "border": "none",  # Removes any outer border
-            "box-shadow": "0px 4px 10px rgba(0,0,0,0.1)",  # Optional soft shadow for visibility
-        },
-    ),
-
-])
-### mouse hover tip ### end
-
 
 # --------------------  function to update figures ------------------------- start
 def figUpdate(df):
@@ -262,206 +187,793 @@ def figUpdate(df):
     return piePortfolio, pieStrategy, fig_3d, portfolioSeries, strategySeries, dfPortStraSer
 
 # --------------------  function to update figures ------------------------- end
-
 df = app.server.df
 piePortfolio,pieStrategy, fig_3d, portfolioSeries, strategySeries, dfPortStraSer = figUpdate(df)
 
 
-####  --- New layout section -------------- ##### Start
-app.layout = dbc.Container(
-    fluid=True,
-    className="p-2",
-    style={
-        "backgroundColor": BG_WHITE,
-        "minHeight": "100vh"
-    },
-    children=[
+### mouse hover tip ### start
+txtTechnicalChallenges =  dbc.Container([
+    html.H5("Technical Challenges", id="tipTechnicalChallenges"),
+    dbc.Tooltip(
+        html.Div(
+    [
+        html.B("Common Issues", style={"fontSize": "16px"}),
+        html.Hr(style={"margin": "4px 0"}),
+        html.Ul(
+            [
+                html.Div("1. Slow response"),
+                html.Div("2. Drill-down and drill-through are slow"),
+                html.Div("3. Filters freeze"),
+                html.Div("4. Reports time out"),
+                html.Div("5. Business calculations become difficult"),
+                html.Div("6.Performance degrades quickly"),
+                html.Div("7. Lacks flexibility"),
+                html.Div("8. Limited custom algorithms"),
+                html.Div("9. Cost escalation"),
+                html.Div("10. Limited interactivity"),
+            ],
+            style={
+                "paddingLeft": "18px",
+                "margin": "5",
+                "fontSize": "14px",
+                "lineHeight": "1.3",
+            },
+        ),
+            ],
+            style={"text-align": "left", "width": "100%"}
+        ),
+        "Black text on a white background with no borders!",
+        target="tipTechnicalChallenges",
+        placement="bottom",
+        # This style block overrides Bootstrap 5 CSS variables directly
+        style={
+            "--bs-tooltip-bg": "#ffffff",  # Sets background to white
+            "--bs-tooltip-color": "#000000",  # Sets text to black
+            "text-align": "left",
+            "border": "none",  # Removes any outer border
+            "box-shadow": "0px 4px 10px rgba(0,0,0,0.1)",  # Optional soft shadow for visibility
+        },
+    ),
 
-        dbc.Row(
-            dbc.Col(
-                html.H3(
-                    "Analytics Platform",
-                    className="text-center mb-2",
-                    style={
-                        "fontSize": "32px",
-                        "fontWeight": "600"
-                    },
-                ),
-                width=12,
-            ),
-            className="g-0",
+])
+### mouse hover tip ### end
+
+
+
+app.index_string = '''
+<!DOCTYPE html>
+<html>
+    <head>
+        {%metas%}
+        <title> </title>   <!-- force empty title -->
+        {%css%}
+        <link rel="icon" href="data:;base64,iVBORw0KGgo="> <!-- blank favicon -->
+        
+        <style>
+        /* =================================================
+           GLOBAL
+           ================================================= */
+        * {
+
+            box-sizing: border-box;
+        }
+        
+        html,
+        body {
+
+            margin: 0;
+
+            padding: 0;
+
+            width: 100%;
+
+            height: 100%;
+
+            overflow: hidden;
+
+            font-family: Arial, sans-serif;
+        }
+        
+                /* =================================================
+           PAGE
+           ================================================= */
+
+        .page {
+
+            width: 100vw;
+
+            height: 100vh;
+
+            overflow: hidden;
+
+            display: flex;
+
+            flex-direction: column;
+        }
+        
+                /* =================================================
+           MAIN DASHBOARD
+
+           Columns:
+
+               20% | 40% | 40%
+
+           Rows:
+
+               55% | 45%
+
+           Total height:
+
+               100% of remaining viewport
+           ================================================= */
+
+        .dashboard {
+
+            display: grid;
+
+            grid-template-columns:
+
+                20%
+                40%
+                40%;
+
+            grid-template-rows:
+
+                55%
+                45%;
+
+            width: 100vw;
+
+            height: calc(100vh - 50px);
+
+            overflow: hidden;
+
+            min-width: 0;
+
+            min-height: 0;
+        }
+        
+                /* =================================================
+           LEFT COLUMN
+           ================================================= */
+
+        .left-column {
+
+            grid-column: 1;
+
+            grid-row: 1 / 3;
+
+            display: flex;
+
+            flex-direction: column;
+
+            gap: 5px;
+
+            padding: 5px;
+
+            border-right: 1px solid #cccccc;
+
+            overflow: hidden;
+
+            min-width: 0;
+
+            min-height: 0;
+        }
+
+
+        /* =================================================
+           DROPDOWNS
+           ================================================= */
+
+        .dropdown {
+            width: 100%;
+            flex-shrink: 0;
+        }
+        
+        /* =================================================
+           TEXT BOXES
+           ================================================= */
+
+        .text-box {
+
+            height: 32px;
+
+            min-height: 32px;
+
+            width: 100%;
+
+            padding: 7px 10px;
+
+            border: 1px solid #cccccc;
+
+            border-radius: 4px;
+
+            background: #f7f7f7;
+
+            font-weight: bold;
+
+            flex-shrink: 0;
+        }
+        
+        /* =================================================
+           SMALL BAR CHART ROWS
+           ================================================= */
+
+        .small-chart-row {
+
+            display: grid;
+
+            grid-template-columns:
+
+                50%
+                50%;
+
+            width: 100%;
+
+            flex: 1;
+
+            min-height: 0;
+
+            overflow: hidden;
+        }
+
+
+        .small-chart {
+
+            width: 100% !important;
+
+            height: 100% !important;
+
+            min-width: 0;
+
+            min-height: 0;
+        }
+        
+        /* =================================================
+        MIDDLE COLUMN
+        ================================================= */
+
+        .middle-column {
+
+            grid-column: 2;
+
+            grid-row: 1;
+
+            padding: 3px;
+
+            border-right: 1px solid #cccccc;
+
+            overflow: hidden;
+
+            min-width: 0;
+
+            min-height: 0;
+        }
+        
+                /* =================================================
+           TOP CHART ROW
+           ================================================= */
+
+        .top-chart-row {
+
+            display: grid;
+
+            grid-template-columns: repeat(3, 25%);
+
+            width: 100%;
+            
+            gap: 10%;
+
+            height: 70%;
+
+            min-width: 0;
+
+            min-height: 0;
+
+            overflow: hidden;
+        }
+
+
+        .top-chart {
+
+            width: 100% !important;
+
+            height: 100% !important;
+
+            min-width: 0;
+
+            min-height: 0;
+        }
+
+
+        /* =================================================
+           RIGHT COLUMN
+           ================================================= */
+
+        .right-column {
+
+            grid-column: 3;
+
+            grid-row: 1;
+
+            padding: 3px;
+
+            overflow: hidden;
+
+            min-width: 0;
+
+            min-height: 0;
+        }
+
+
+        /* =================================================
+           3D SCATTER
+           ================================================= */
+
+        .scatter3d {
+
+            width: 100% !important;
+
+            height: 100% !important;
+
+            min-width: 0;
+
+            min-height: 0;
+        }
+
+
+        /* =================================================
+           BOTTOM SCATTER
+
+           Spans:
+
+               Middle 40%
+                   +
+               Right 40%
+
+               = 80%
+           ================================================= */
+
+        .bottom-scatter {
+
+            grid-column: 2 / 4;
+
+            grid-row: 2;
+
+            padding: 3px;
+
+            border-top: 1px solid #cccccc;
+
+            overflow: hidden;
+
+            min-width: 0;
+
+            min-height: 0;
+        }
+
+
+        .scatter5 {
+
+            width: 100% !important;
+
+            height: 100% !important;
+
+            min-width: 0;
+
+            min-height: 0;
+        }
+
+
+        /* =================================================
+           PLOTLY CONTAINER
+           ================================================= */
+
+        .js-plotly-plot,
+        .plot-container {
+
+            width: 100% !important;
+
+            height: 100% !important;
+        }
+
+
+        .dash-graph {
+
+            width: 100%;
+
+            height: 100%;
+        }
+
+
+        /* =================================================
+           PREVENT CHILDREN FROM CAUSING OVERFLOW
+           ================================================= */
+
+        .left-column > *,
+        .middle-column > *,
+        .right-column > *,
+        .bottom-scatter > * {
+
+            max-width: 100%;
+
+            min-width: 0;
+        }
+
+
+        /* =================================================
+           MOBILE / SMALL SCREEN
+
+           On a small screen, one-page desktop layout
+           cannot realistically display all charts.
+
+           Therefore switch to a normal vertical layout.
+           ================================================= */
+
+        @media (max-width: 900px) {
+
+            html,
+            body {
+
+                overflow: auto;
+            }
+
+
+            .page {
+
+                height: auto;
+
+                overflow: visible;
+            }
+
+
+            .dashboard {
+
+                display: block;
+
+                width: 100%;
+
+                height: auto;
+
+                overflow: visible;
+            }
+
+
+            .left-column,
+            .middle-column,
+            .right-column,
+            .bottom-scatter {
+
+                width: 100%;
+
+                height: 450px;
+
+                border-right: none;
+            }
+
+
+            .dashboard-title {
+
+                position: sticky;
+
+                top: 0;
+
+                z-index: 100;
+            }
+
+        }
+        
+        </style>
+        
+    
+    </head>
+    <body>
+        {%app_entry%}
+        <footer>
+            {%config%}
+            {%scripts%}
+            {%renderer%}
+        </footer>
+    </body>
+</html>
+'''
+
+
+app.layout = html.Div(
+    className = "page",
+    children =[
+        # =================================================
+        # DASHBOARD TITLE
+        # =================================================
+        html.Div(
+
+            "MARKET ANALYTICS DASHBOARD",
+            className="text-center mb-2"
         ),
 
-        # =========================================================
-        # FILTERS + DONUT CHARTS
-        # =========================================================
-        dbc.Row(
-            [
-                # =========================
-                # FILTER COLUMN
-                # =========================
-                dbc.Col(
-                    [
+        # =================================================
+        # MAIN DASHBOARD
+        # =================================================
+        html.Div(
+            className="dashboard",
+            children=[
 
+                        # =========================================
+                        # LEFT COLUMN - 20%
+                        # =========================================
+                        html.Div(
+                            className="left-column",
+                            children=[
 
-                        dcc.Dropdown(
-                            id="ddPortfolio",
-                            options=[
-                                {"label": p, "value": p}
-                                for p in portfolioSeries
-                            ],
-                            placeholder="Select Portfolio Name",
-                            multi=True,
+                            # ---------------------------------
+                            # Dropdown 1
+                            # ---------------------------------
+                            dcc.Dropdown(
+                                id="ddPortfolio",
+                                options=[
+                                    {"label": p, "value": p}
+                                    for p in portfolioSeries
+                                ],
+                                placeholder="Select Portfolio Name",
+                                multi=True,
+                            ),
+                            # ---------------------------------
+                            # Dropdown 2
+                            # ---------------------------------
+                            dcc.Dropdown(
+                                id="ddStrategy",
+                                options=[
+                                    {"label": p, "value": p}
+                                    for p in strategySeries
+                                ],
+                                placeholder="Select Strategy Name",
+                                multi=True,
+                            ),
+
+                            # ---------------------------------
+                            # Dropdown 3
+                            # ---------------------------------
+                            dcc.Dropdown(
+                                id="ddSeries",
+                                options=[
+                                    {"label": p, "value": p}
+                                    for p in
+                                    dfPortStraSer
+                                    .select(pl.col("SERIES"))
+                                    .unique()
+                                    .to_series()
+                                    .sort()
+                                ],
+                                placeholder="Select Series Name",
+                                multi=True,
+                            ),
+
+                            # ---------------------------------
+                            # Mouseover Text Business Challenges
+                            # ---------------------------------
+                            html.H3(
+                                txtTechnicalChallenges,
+                                className="text-box"
+                            ),
+
+                            # =================================
+                            # BAR 6 + BAR 7
+                            # =================================
+                            html.Div(
+                                className="small-chart-row",
+                                children=[
+                                    dcc.Graph(
+                                        id="piePortfolio1",
+
+                                        figure=piePortfolio,
+
+                                        className="small-chart",
+
+                                        config={
+                                            "displayModeBar": False
+                                        }
+                                    ),
+                                    dcc.Graph(
+                                        id="pieStrategy1",
+
+                                        figure=pieStrategy,
+
+                                        className="small-chart",
+
+                                        config={
+                                            "displayModeBar": False
+                                        }
+                                    ),
+                                ]
+                            ),
+
+                            # =================================
+                            # BAR 8 + BAR 9
+                            # =================================
+                            html.Div(
+                                className="small-chart-row",
+                                children=[
+                                    dcc.Graph(
+                                        id="bar8",
+
+                                        figure=go.Figure(),
+
+                                        className="small-chart",
+
+                                        config={
+                                            "displayModeBar": False
+                                        }
+                                    ),
+                                    dcc.Graph(
+                                        id="bar9",
+
+                                        figure=go.Figure(),
+
+                                        className="small-chart",
+
+                                        config={
+                                            "displayModeBar": False
+                                        }
+                                    ),
+                                    ]
+                                )
+                            ]
                         ),
 
-                        dcc.Dropdown(
-                            id="ddStrategy",
-                            options=[
-                                {"label": p, "value": p}
-                                for p in strategySeries
-                            ],
-                            placeholder="Select Strategy Name",
-                            multi=True,
+                        # =========================================
+                        # MIDDLE COLUMN - 40%
+                        # =========================================
+                        html.Div(
+                            className="middle-column",
+                            children=[
+                                html.Div(
+                                    className="top-chart-row",
+                                    children=[
+                                        # -------------------------
+                                        # Pie Chart 1
+                                        # -------------------------
+
+                                        dcc.Graph(
+
+                                            id="piePortfolio1",
+
+                                            figure=piePortfolio,
+
+                                            className="top-chart",
+
+                                            config={
+                                                "displayModeBar": False
+                                            }
+                                        ),
+                                        # -------------------------
+                                        # Pie Chart 2
+                                        # -------------------------
+
+                                        dcc.Graph(
+
+                                            id="pieStrategy1",
+
+                                            figure=pieStrategy,
+
+                                            className="top-chart",
+
+                                            config={
+                                                "displayModeBar": False
+                                            }
+                                        ),
+
+                                        # -------------------------
+                                        # Bar Chart 3
+                                        # -------------------------
+                                        dcc.Graph(
+
+                                            id="barStrategy1",
+
+                                            figure=pieStrategy,
+
+                                            className="top-chart",
+
+                                            config={
+                                                "displayModeBar": False
+                                            }
+                                        )
+                                    ]
+
+                                )
+                            ]
                         ),
 
-                        dcc.Dropdown(
-                            id="ddSeries",
-                            options=[
-                                {"label": p, "value": p}
-                                for p in
-                                dfPortStraSer
-                                .select(pl.col("SERIES"))
-                                .unique()
-                                .to_series()
-                                .sort()
-                            ],
-                            placeholder="Select Series Name",
-                            multi=True,
-                        ),
-                        html.H3(
-                            txtTechnicalChallenges,
-                        ),
-                    ],
-                    width=3,
-                    # className="border p-1",
-                    # className="border",
-                ),
+                        # =========================================
+                        # RIGHT COLUMN - 40%
+                        # =========================================
+                        html.Div(
+                            className="right-column",
+                            children=[
+                                # -----------------------------
+                                # 3D Scatter Chart 4
+                                # -----------------------------
 
-                # =========================
-                # DONUT COLUMN
-                # =========================
-                dbc.Col(
-                    dbc.Row(
-                        [
-                            dbc.Col(
-                                [
-                                    dbc.Row([
                                 dcc.Graph(
-                                    id="piePortfolio1",
-                                    figure=piePortfolio,
-                                    style={
-                                        "width": "30%",
-                                        "height": "150px"
-                                    },
+
+                                    id="fig_3did",
+
+                                    figure=fig_3d,
+
+                                    className="scatter3d",
+
                                     config={
                                         "displayModeBar": False
-                                    },
-                                ),
+                                    }
+                                )
+                            ]
+                        ),
+
+                        # =========================================
+                        # BOTTOM SCATTER
+                        #
+                        # Spans middle + right columns
+                        # =========================================
+                        html.Div(
+
+                            className="bottom-scatter",
+                            children=[
                                 dcc.Graph(
-                                    id="pieStrategy1",
-                                    figure=pieStrategy,
-                                    style={
-                                        "width": "30%",
-                                        "height": "150px"
-                                    },
-                                    config={
-                                        "displayModeBar": False
-                                    },
-                                ),
-                                dcc.Graph(
-                                    id="barStrategy1",
-                                    figure=pieStrategy,
-                                    style={
-                                        "width": "30%",
-                                        "height": "115px"
-                                    },
-                                    config={
-                                        "displayModeBar": False
-                                    },
-                                ),
-                                dcc.Graph(
-                                         id="gpMultiLine",
-                                         figure= go.Figure(
+                                    id="gpMultiLine",
+                                    figure=go.Figure(
                                              layout=dict(
                                                  paper_bgcolor="white",
                                                  plot_bgcolor="white",
                                                  margin=dict(l=10, r=10, t=10, b=10),
                                              )
                                          ),
-                                         config={"displayModeBar": False},
-                                         style={
-                                             "height": "350px",
-                                             "width": "100%",
-                                             "backgroundColor": "white",
-                                         }
-                                     ),
-                                ])
-                                ],
-                                width=6,
-                                # className="border p-0",
 
-                            ),
-                            # =========================================================
-                            # 3D SCATTER CHART - ROW BELOW
-                            # =========================================================
-                            dcc.Graph(
-                                id="fig_3did",
-                                figure=fig_3d,
-                                style={
-                                    "width": "45%",
-                                    "height": "350px"
-                                },
-                                config={
-                                    "displayModeBar": False
-                                },
-                            )
+                                    className="scatter5",
+                                    config={
+                                        "displayModeBar": False
+                                    },
+                                    style={
+                                        "height": "350px",
+                                        "width": "100%",
+                                        "backgroundColor": "white",
+                                    }
+                                )
+                            ]
+                        )
 
-                        ],
-                        className="g-0",
-                    ),
-                    width=9,
-                    # className="border p-0",
-                ),
-            ],
-            className="g-0",
-            style={
-                "margin": "0",
-                "padding": "0",
-            },
-        ),
-        dbc.Row(
-            [
-                dbc.Col([html.H3(" ---- "),
-                         ]
-                        # ,className="border p-1",
-                        ),
-                dbc.Col([html.H3(" ------ ")],
-                        # className="border p-1",
-                        # className="border",
-                        ),
+                ]
+            )
 
-            ],
-            # className="border p-1",
-            # className="border",
-            style={
-                "margin": "0",
-                "padding": "0",
-            },
-        )
     ]
-)
+    )
 
-####  --- New layout section -------------- ##### End
+
+##### update layout ######## start
+figures = []
+for fig in figures:
+
+    fig.update_layout(
+
+        autosize=True,
+
+        margin=dict(
+            l=25,
+            r=15,
+            t=40,
+            b=25
+        ),
+
+        title=dict(
+            font=dict(
+                size=14
+            )
+        ),
+
+        legend=dict(
+            font=dict(
+                size=9
+            )
+        )
+    )
+##### update layout ######## end
 
 ##-------------- common FILTER function ------------------- ## Start
 def get_filtered_df(portfolioName, strategyName, seriesName):
@@ -1083,6 +1595,12 @@ def update_multiline(clickData):
 ## --------------------Multiline -------------------## End
 
 ###########################  callbacks ##########################  end
+
+
+###################################### Process ####################################### end
+
+
+
 
 if __name__ == "__main__":
     app.run(debug=True)#--------------- Dash App Ends  here --------------------------------
