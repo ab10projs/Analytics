@@ -2,6 +2,7 @@ import polars as pl
 import pandas as pd
 
 import dash
+from click import style
 
 pd.set_option('display.max_columns', None)
 pl.Config.set_fmt_float("full")
@@ -251,16 +252,12 @@ txtSolutionArchitecture =  dbc.Container([
         html.Hr(style={"margin": "4px 0"}),
         html.Ul(
             [
-                html.Div("1. Slow response"),
-                html.Div("2. Drill-down and drill-through are slow"),
-                html.Div("3. Filters freeze"),
-                html.Div("4. Reports time out"),
-                html.Div("5. Business calculations become difficult"),
-                html.Div("6.Performance degrades quickly"),
-                html.Div("7. Lacks flexibility"),
-                html.Div("8. Limited custom algorithms"),
-                html.Div("9. Cost escalation"),
-                html.Div("10. Limited interactivity"),
+                html.Div("1. Intelligent Cache"),
+                html.Div("2. Reduced I/O"),
+                html.Div("3. Control Latency"),
+                html.Div("4. Concurrent Users"),
+                html.Div("5. Vectorized processing"),
+                html.Div("6. Scalable to Petabytes"),
             ],
             style={
                 "paddingLeft": "18px",
@@ -287,110 +284,6 @@ txtSolutionArchitecture =  dbc.Container([
 ])
 ### mouse hover tip ### end
 
-
-##### Basic small static charts #### start
-import plotly.express as px
-# =================================
-# SMALL BAR CHART 1
-# =================================
-dfbar6 = dfPortStraSer.head(5)
-bar6 = px.bar(
-    x=  ["A", "B", "C"],
-    y=  [25, 40, 30]
-)
-
-bar6.update_traces(
-    text=None,
-    texttemplate=None,
-    textposition="none"
-)
-
-bar6.update_layout(
-    title=None,
-    showlegend=False,
-    paper_bgcolor="white",
-    plot_bgcolor="white",
-    margin=dict(l=2, r=2, t=2, b=2),
-    xaxis=dict(
-        visible=False,
-        showgrid=False,
-        zeroline=False
-    ),
-    yaxis=dict(
-        visible=False,
-        showgrid=False,
-        zeroline=False
-    )
-)
-
-
-# =================================
-# SMALL BAR CHART 2
-# =================================
-bar7 = px.bar(
-    x=["A", "B", "C"],
-    y=[35, 20, 45]
-)
-
-bar7.update_layout(
-    title=None,
-    showlegend=False,
-    paper_bgcolor="white",
-    plot_bgcolor="white",
-    margin=dict(l=2, r=2, t=2, b=2),
-    xaxis=dict(
-        visible=False,
-        showgrid=False,
-        zeroline=False
-    ),
-    yaxis=dict(
-        visible=False,
-        showgrid=False,
-        zeroline=False
-    )
-)
-
-
-# =================================
-# SMALL PIE CHART
-# =================================
-bar8 = px.pie(
-    names=["A", "B", "C"],
-    values=[40, 35, 25]
-)
-
-bar8.update_traces(
-    textinfo="none",
-    texttemplate="",
-    textposition="none"
-)
-
-bar8.update_layout(
-    title=None,
-    showlegend=False,
-    margin=dict(l=2, r=2, t=2, b=2)
-)
-
-
-# =================================
-# SMALL DONUT CHART
-# =================================
-bar9 = px.pie(
-    names=["A", "B", "C"],
-    values=[45, 30, 25],
-    hole=0.55
-)
-
-bar9.update_traces(
-    textinfo="none"
-)
-
-bar9.update_layout(
-    title=None,
-    showlegend=False,
-    margin=dict(l=2, r=2, t=2, b=2)
-)
-##### Basic small static charts #### end
 
 
 app.index_string = '''
@@ -700,7 +593,7 @@ app.index_string = '''
 
             grid-row: 2;
 
-            padding: 3px;
+            padding: 0;
 
             border-top: 1px solid #cccccc;
 
@@ -721,6 +614,8 @@ app.index_string = '''
             min-width: 0;
 
             min-height: 0;
+            
+            margin: 0 !important;
         }
 
 
@@ -848,7 +743,8 @@ app.layout = html.Div(
 
             "MARKET ANALYTICS DASHBOARD",
             className="text-center mb-2",
-            style={"fontSize": "24px"}
+            style={"fontSize": "24px",
+                   "fontWeight": "bold"}
         ),
 
         # =================================================
@@ -931,11 +827,12 @@ app.layout = html.Div(
                                 }
                             ),
 
-                            html.H5(
-                                "Metrics",
+                            html.H6(
+                                "Metrics 12 Core, 16GB RAM i5",
                                 style={
                                     "backgroundColor": "white",
-                                    "textAlign": "center"
+                                    "textAlign": "center",
+                                    "fontWeight": "bold"
                                 }
                             ),
 
@@ -943,24 +840,27 @@ app.layout = html.Div(
                             # BAR 6 + BAR 7
                             # =================================
                             html.Div(
-                                className="small-chart-row",
+                                # className="small-chart-row",
                                 children=[
-                                    dcc.Graph(
-                                        id="bar6",
-                                        figure=bar6,
-                                        className="small-chart",
-                                        config={
-                                            "displayModeBar": False
-                                        }
-                                    ),
-                                    dcc.Graph(
-                                        id="bar7",
-                                        figure=bar7,
-                                        className="small-chart",
-                                        config={
-                                            "displayModeBar": False
-                                        }
-                                    ),
+                                        html.H6(f"Time(sec) 4,500,120 Rows: {10}",
+                                                style={"fontSize": "14px",
+                                                       "fontWeight": "bold"}),
+                                        html.H6(f"Max Profit Portfolio:",
+                                                style={"fontSize": "14px"}),
+                                        html.H6(f"Records Filtered:",
+                                                style={"fontSize": "14px"}),
+                                        html.H6(f"Max Series:",
+                                            style={"fontSize": "14px"}),
+                                        html.H6(f"Min Series:",
+                                            style={"fontSize": "14px"}),
+                                        html.H6(f"Max Series Portfolio:",
+                                                style={"fontSize": "14px"}),
+                                        html.H6(f"Min Series Portfolio:",
+                                                style={"fontSize": "14px"}),
+                                        html.H6(f"Max Series Profit:",
+                                                style={"fontSize": "14px"}),
+                                        html.H6(f"Min Series Loss:",
+                                                style={"fontSize": "14px"}),
                                 ]
                             ),
 
@@ -970,22 +870,7 @@ app.layout = html.Div(
                             html.Div(
                                 className="small-chart-row",
                                 children=[
-                                    dcc.Graph(
-                                        id="bar8",
-                                        figure=bar8,
-                                        className="small-chart",
-                                        config={
-                                            "displayModeBar": False
-                                        }
-                                    ),
-                                    dcc.Graph(
-                                        id="bar9",
-                                        figure=bar9,
-                                        className="small-chart",
-                                        config={
-                                            "displayModeBar": False
-                                        }
-                                    ),
+
                                     ]
                                 )
                             ]
@@ -1002,7 +887,9 @@ app.layout = html.Div(
                                     "Portfolio and Strategy Details",
                                     style={
                                         "backgroundColor": "white",
-                                        "textAlign": "center"
+                                        "textAlign": "center",
+                                        "fontWeight": "bold",
+                                        "fontStyle": "italic"
                                     }
                                 ),
 
@@ -1074,7 +961,9 @@ app.layout = html.Div(
                                     "Portfolio and Series Details",
                                     style={
                                         "backgroundColor": "white",
-                                        "textAlign": "center"
+                                        "textAlign": "center",
+                                        "fontWeight": "bold",
+                                        "fontStyle": "italic"
                                     }
                                 ),
 
@@ -1111,7 +1000,9 @@ app.layout = html.Div(
                                     "Drill Down",
                                     style={
                                         "backgroundColor": "white",
-                                        "textAlign": "center"
+                                        "textAlign": "center",
+                                        "fontWeight": "bold",
+                                        "fontStyle": "italic"
                                     }
                                 ),
 
@@ -1145,34 +1036,7 @@ app.layout = html.Div(
     )
 
 
-##### update layout ######## start
-figures = []
-for fig in figures:
 
-    fig.update_layout(
-
-        autosize=True,
-
-        margin=dict(
-            l=25,
-            r=15,
-            t=40,
-            b=25
-        ),
-
-        title=dict(
-            font=dict(
-                size=14
-            )
-        ),
-
-        legend=dict(
-            font=dict(
-                size=9
-            )
-        )
-    )
-##### update layout ######## end
 
 ##-------------- common FILTER function ------------------- ## Start
 def get_filtered_df(portfolioName, strategyName, seriesName):
@@ -1410,6 +1274,7 @@ def updatePortfolioPie(
     fig = go.Figure(
         data=[
             go.Pie(
+                title= "Portfolio",
                 labels=dfPie["Portfolio"].to_list(),
                 values=dfPie["pl"].to_list(),
                 hole=0.5,
@@ -1469,6 +1334,7 @@ def updateStrategyPie(
     fig = go.Figure(
         data=[
             go.Pie(
+                title="Strategy",
                 labels=dfPie["Strategy"].to_list(),
                 values=dfPie["pl"].to_list(),
                 hole=0.5,
@@ -1547,7 +1413,7 @@ def updateStrategyBar(
         showlegend=False,
         xaxis=dict(
             showticklabels=False,
-            title=None
+            title= 'Series'
         ),
 
         yaxis=dict(
