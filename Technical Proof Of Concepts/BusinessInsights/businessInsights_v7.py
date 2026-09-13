@@ -190,14 +190,16 @@ def figUpdate(df):
 df = app.server.df
 piePortfolio,pieStrategy, fig_3d, portfolioSeries, strategySeries, dfPortStraSer = figUpdate(df)
 
+print("dfPortStraSer.head(3)")
+print(dfPortStraSer.head(3))
 
 ### mouse hover tip ### start
 txtTechnicalChallenges =  dbc.Container([
-    html.H5("Technical Challenges", id="tipTechnicalChallenges"),
+    html.H5("Technical Challenges", id="tipTechnicalChallenges" , style={"fontSize": "14px"}),
     dbc.Tooltip(
         html.Div(
     [
-        html.B("Common Issues", style={"fontSize": "16px"}),
+        html.B("Common Issues", style={"fontSize": "14px"}),
         html.Hr(style={"margin": "4px 0"}),
         html.Ul(
             [
@@ -238,6 +240,157 @@ txtTechnicalChallenges =  dbc.Container([
 ])
 ### mouse hover tip ### end
 
+
+### mouse hover tip  Solution Architecture  ### start
+txtSolutionArchitecture =  dbc.Container([
+    html.H5(" Solution Architecture", id="tipSolutionArchitecture" , style={"fontSize": "14px"}),
+    dbc.Tooltip(
+        html.Div(
+    [
+        html.B("Design Considerations", style={"fontSize": "14px"}),
+        html.Hr(style={"margin": "4px 0"}),
+        html.Ul(
+            [
+                html.Div("1. Slow response"),
+                html.Div("2. Drill-down and drill-through are slow"),
+                html.Div("3. Filters freeze"),
+                html.Div("4. Reports time out"),
+                html.Div("5. Business calculations become difficult"),
+                html.Div("6.Performance degrades quickly"),
+                html.Div("7. Lacks flexibility"),
+                html.Div("8. Limited custom algorithms"),
+                html.Div("9. Cost escalation"),
+                html.Div("10. Limited interactivity"),
+            ],
+            style={
+                "paddingLeft": "18px",
+                "margin": "5",
+                "fontSize": "14px",
+                "lineHeight": "1.3",
+            },
+        ),
+            ],
+            style={"text-align": "left", "width": "100%"}
+        ),
+        "Black text on a white background with no borders!",
+        target="tipSolutionArchitecture",
+        placement="bottom",
+        # This style block overrides Bootstrap 5 CSS variables directly
+        style={
+            "--bs-tooltip-bg": "#ffffff",  # Sets background to white
+            "--bs-tooltip-color": "#000000",  # Sets text to black
+            "text-align": "left",
+            "border": "none",  # Removes any outer border
+            "box-shadow": "0px 4px 10px rgba(0,0,0,0.1)",  # Optional soft shadow for visibility
+        },
+    ),
+])
+### mouse hover tip ### end
+
+
+##### Basic small static charts #### start
+import plotly.express as px
+# =================================
+# SMALL BAR CHART 1
+# =================================
+dfbar6 = dfPortStraSer.head(5)
+bar6 = px.bar(
+    x=  ["A", "B", "C"],
+    y=  [25, 40, 30]
+)
+
+bar6.update_traces(
+    text=None,
+    texttemplate=None,
+    textposition="none"
+)
+
+bar6.update_layout(
+    title=None,
+    showlegend=False,
+    paper_bgcolor="white",
+    plot_bgcolor="white",
+    margin=dict(l=2, r=2, t=2, b=2),
+    xaxis=dict(
+        visible=False,
+        showgrid=False,
+        zeroline=False
+    ),
+    yaxis=dict(
+        visible=False,
+        showgrid=False,
+        zeroline=False
+    )
+)
+
+
+# =================================
+# SMALL BAR CHART 2
+# =================================
+bar7 = px.bar(
+    x=["A", "B", "C"],
+    y=[35, 20, 45]
+)
+
+bar7.update_layout(
+    title=None,
+    showlegend=False,
+    paper_bgcolor="white",
+    plot_bgcolor="white",
+    margin=dict(l=2, r=2, t=2, b=2),
+    xaxis=dict(
+        visible=False,
+        showgrid=False,
+        zeroline=False
+    ),
+    yaxis=dict(
+        visible=False,
+        showgrid=False,
+        zeroline=False
+    )
+)
+
+
+# =================================
+# SMALL PIE CHART
+# =================================
+bar8 = px.pie(
+    names=["A", "B", "C"],
+    values=[40, 35, 25]
+)
+
+bar8.update_traces(
+    textinfo="none",
+    texttemplate="",
+    textposition="none"
+)
+
+bar8.update_layout(
+    title=None,
+    showlegend=False,
+    margin=dict(l=2, r=2, t=2, b=2)
+)
+
+
+# =================================
+# SMALL DONUT CHART
+# =================================
+bar9 = px.pie(
+    names=["A", "B", "C"],
+    values=[45, 30, 25],
+    hole=0.55
+)
+
+bar9.update_traces(
+    textinfo="none"
+)
+
+bar9.update_layout(
+    title=None,
+    showlegend=False,
+    margin=dict(l=2, r=2, t=2, b=2)
+)
+##### Basic small static charts #### end
 
 
 app.index_string = '''
@@ -403,14 +556,13 @@ app.index_string = '''
 
             display: grid;
 
-            grid-template-columns:
-
-                50%
-                50%;
+            grid-template-columns: 1fr 1fr;
 
             width: 100%;
+            
+            height: 25%;
 
-            flex: 1;
+            flex: 1 1 0;
 
             min-height: 0;
 
@@ -419,15 +571,23 @@ app.index_string = '''
 
 
         .small-chart {
-
-            width: 100% !important;
-
-            height: 100% !important;
-
+            width: 65% !important;
+            height: 65% !important;
+        
             min-width: 0;
-
             min-height: 0;
+        
+            overflow: hidden;
         }
+        
+        /* Plotly container */
+
+        .small-chart .js-plotly-plot,
+        .small-chart .plot-container {
+            width: 100% !important;
+            height: 100% !important;
+        }
+        
         
         /* =================================================
         MIDDLE COLUMN
@@ -450,7 +610,7 @@ app.index_string = '''
             min-height: 0;
         }
         
-                /* =================================================
+          /* =================================================
            TOP CHART ROW
            ================================================= */
 
@@ -687,7 +847,8 @@ app.layout = html.Div(
         html.Div(
 
             "MARKET ANALYTICS DASHBOARD",
-            className="text-center mb-2"
+            className="text-center mb-2",
+            style={"fontSize": "24px"}
         ),
 
         # =================================================
@@ -755,6 +916,15 @@ app.layout = html.Div(
                                 className="text-box"
                             ),
 
+
+                            # ---------------------------------
+                            # Mouseover Text txtSolutionArchitecture
+                            # ---------------------------------
+                            html.H3(
+                                txtSolutionArchitecture,
+                                className="text-box"
+                            ),
+
                             # =================================
                             # BAR 6 + BAR 7
                             # =================================
@@ -762,23 +932,17 @@ app.layout = html.Div(
                                 className="small-chart-row",
                                 children=[
                                     dcc.Graph(
-                                        id="piePortfolio1",
-
-                                        figure=piePortfolio,
-
+                                        id="bar6",
+                                        figure=bar6,
                                         className="small-chart",
-
                                         config={
                                             "displayModeBar": False
                                         }
                                     ),
                                     dcc.Graph(
-                                        id="pieStrategy1",
-
-                                        figure=pieStrategy,
-
+                                        id="bar7",
+                                        figure=bar7,
                                         className="small-chart",
-
                                         config={
                                             "displayModeBar": False
                                         }
@@ -794,22 +958,16 @@ app.layout = html.Div(
                                 children=[
                                     dcc.Graph(
                                         id="bar8",
-
-                                        figure=go.Figure(),
-
+                                        figure=bar8,
                                         className="small-chart",
-
                                         config={
                                             "displayModeBar": False
                                         }
                                     ),
                                     dcc.Graph(
                                         id="bar9",
-
-                                        figure=go.Figure(),
-
+                                        figure=bar9,
                                         className="small-chart",
-
                                         config={
                                             "displayModeBar": False
                                         }
