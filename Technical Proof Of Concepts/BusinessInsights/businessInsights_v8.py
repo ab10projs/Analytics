@@ -1308,14 +1308,32 @@ def updatePortfolioPie(
     )
 
     timeEnd = datetime.datetime.now()
-    processingTime = str((timeEnd.microsecond - timeStart.microsecond)/1000000)
+    processingTime = timeEnd - timeStart
+    processingTime = str( processingTime.total_seconds() )
 
 
     dfMaxLoss = dfFiltered.sort(by=pl.col('profitLoss')).head(1).collect()
-
     print(dfMaxLoss)
+
     dfMaxProfit = dfFiltered.sort(by=pl.col('profitLoss')).tail(1).collect()
     print(dfMaxProfit)
+
+    lossVal = dfMaxLoss.select(pl.col('profitLoss')).to_series()[0]
+    lossPortfolio = dfMaxLoss.select(pl.col('Portfolio')).to_series()[0]
+    lossSer = dfMaxLoss.select(pl.col('SERIES')).to_series()[0]
+
+    print(lossVal)
+    print(lossSer)
+    print(lossPortfolio)
+
+    profitVal = dfMaxProfit.select(pl.col('profitLoss')).to_series()[0]
+    profitPortfolio = dfMaxProfit.select(pl.col('Portfolio')).to_series()[0]
+    profitSer = dfMaxProfit.select(pl.col('SERIES')).to_series()[0]
+    print(profitVal)
+    print(profitPortfolio)
+    print(profitSer)
+
+
 
 
     return fig, processingTime
