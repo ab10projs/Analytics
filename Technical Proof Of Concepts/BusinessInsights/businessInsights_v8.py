@@ -194,8 +194,6 @@ def figUpdate(df):
 df = app.server.df
 piePortfolio,pieStrategy, fig_3d, portfolioSeries, strategySeries, dfPortStraSer = figUpdate(df)
 
-print("dfPortStraSer.head(3)")
-print(dfPortStraSer.head(3))
 
 ### mouse hover tip ### start
 txtTechnicalChallenges =  dbc.Container([
@@ -848,7 +846,7 @@ app.layout = html.Div(
                                 children=[
                                         html.H6(
                                             children=[
-                                                "Time(sec): ",
+                                                "4500250 Rows, Time(sec):  ",
                                                 html.Span(
                                                     id="processingTimeid",
                                                     children="processingTime"
@@ -1261,6 +1259,7 @@ def updatePortfolioPie(
     strategyName,
     seriesName
 ):
+
     timeStart = datetime.datetime.now()
 
     dfFiltered = get_filtered_df(
@@ -1269,8 +1268,6 @@ def updatePortfolioPie(
         seriesName
     )
 
-    print(dfFiltered.collect().head())
-    print(dfFiltered.select(pl.col('profitLoss')).sum().collect())
 
     dfPie = (
         dfFiltered
@@ -1311,8 +1308,16 @@ def updatePortfolioPie(
     )
 
     timeEnd = datetime.datetime.now()
-    processingTime = str(timeEnd.second - timeStart.second)
-    print(f"processingTime {processingTime}")
+    processingTime = str((timeEnd.microsecond - timeStart.microsecond)/1000000)
+
+
+    dfMaxLoss = dfFiltered.sort(by=pl.col('profitLoss')).head(1).collect()
+
+    print(dfMaxLoss)
+    dfMaxProfit = dfFiltered.sort(by=pl.col('profitLoss')).tail(1).collect()
+    print(dfMaxProfit)
+
+
     return fig, processingTime
 ## ----------------- callback for portfolio pie ------------------## End
 
@@ -1601,13 +1606,11 @@ def update_multiline(clickData):
         )
         return fig
 
-    print(clickData)
-    print(clickData['points'][0]['y'])
 
 
     series    = clickData['points'][0]['y']
 
-    print( series)
+
 
     # Filter original LazyFrame
     q_click = (
