@@ -1,8 +1,11 @@
+import datetime
+
 import polars as pl
 import pandas as pd
 
 import dash
 from click import style
+import time
 
 pd.set_option('display.max_columns', None)
 pl.Config.set_fmt_float("full")
@@ -840,11 +843,20 @@ app.layout = html.Div(
                             # BAR 6 + BAR 7
                             # =================================
                             html.Div(
-                                # className="small-chart-row",
+
+
                                 children=[
-                                        html.H6(f"Time(sec) 4,500,120 Rows: {10}",
-                                                style={"fontSize": "14px",
-                                                       "fontWeight": "bold"}),
+                                        html.H6(
+                                            children=[
+                                                "Time(sec): ",
+                                                html.Span(
+                                                    id="processingTimeid",
+                                                    children="processingTime"
+                                                )
+                                            ],
+                                            style={"fontSize": "14px"}
+                                        ),
+
                                         html.H6(f"Max Profit Portfolio:",
                                                 style={"fontSize": "14px"}),
                                         html.H6(f"Records Filtered:",
@@ -1080,6 +1092,7 @@ def get_filtered_df(portfolioName, strategyName, seriesName):
 )
 def update_dropdowns(portfolioName, strategyName, seriesName):
 
+
     df = app.server.df
 
     # =====================================================
@@ -1237,15 +1250,18 @@ def update_dropdowns(portfolioName, strategyName, seriesName):
 ## ----------------- callback for portfolio pie ------------------## Start
 @app.callback(
     Output("piePortfolio1", "figure"),
+    Output("processingTimeid", "children"),
     Input("ddPortfolio", "value"),
     Input("ddStrategy", "value"),
     Input("ddSeries", "value"),
 )
+
 def updatePortfolioPie(
     portfolioName,
     strategyName,
     seriesName
 ):
+    timeStart = datetime.datetime.now()
 
     dfFiltered = get_filtered_df(
         portfolioName,
@@ -1294,7 +1310,10 @@ def updatePortfolioPie(
         margin=dict(l=5, r=5, t=5, b=5)
     )
 
-    return fig
+    timeEnd = datetime.datetime.now()
+    processingTime = str(timeEnd.second - timeStart.second)
+    print(f"processingTime {processingTime}")
+    return fig, processingTime
 ## ----------------- callback for portfolio pie ------------------## End
 
 ## ------------------ callback for strategy pie chart -----------------## Start
