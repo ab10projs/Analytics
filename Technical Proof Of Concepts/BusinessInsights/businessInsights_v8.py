@@ -833,7 +833,9 @@ app.layout = html.Div(
                                 style={
                                     "backgroundColor": "white",
                                     "textAlign": "center",
-                                    "fontWeight": "bold"
+                                    "fontWeight": "bold",
+                                    "fontStyle": "italic",
+                                    "color": "blue",
                                 }
                             ),
 
@@ -844,32 +846,109 @@ app.layout = html.Div(
 
 
                                 children=[
+                                        html.H6(f"Base Rows: 4,500,250",
+                                                style={"fontSize": "14px",
+                                                       "fontWeight": "bold",
+                                                       "fontStyle": "italic",
+                                                       "color": "brown",
+                                                       }),
                                         html.H6(
                                             children=[
-                                                "4500250 Rows, Time(sec):  ",
+                                                "Processing Time(sec):  ",
                                                 html.Span(
                                                     id="processingTimeid",
-                                                    children="processingTime"
+                                                    children="processingTime",
+                                                    style={
+                                                        "fontWeight": "bold",
+                                                        "fontStyle": "italic",
+                                                        "color": "brown",
+                                                    },
                                                 )
                                             ],
                                             style={"fontSize": "14px"}
                                         ),
+                                        html.H6(f"------------------------------------------------",
+                                                style={"fontSize": "14px"}),
 
-                                        html.H6(f"Max Profit Portfolio:",
+                                        html.H6([f"Max Profit:",
+                                                 html.Span(
+                                                     id="MaxProfitid",
+                                                     children="profitVal",
+                                                     style={
+                                                         "fontWeight": "bold",
+                                                         "fontStyle": "italic",
+                                                         "color": "brown",
+                                                     },
+                                                 )
+                                                 ],
                                                 style={"fontSize": "14px"}),
-                                        html.H6(f"Records Filtered:",
+
+                                        html.H6([f"Max Profit Portfolio:",
+                                                 html.Span(
+                                                     id="MaxProfitPortfolioid",
+                                                     children="profitPortfolio",
+                                                     style={
+                                                         "fontWeight": "bold",
+                                                         "fontStyle": "italic",
+                                                         "color": "brown",
+                                                     },
+                                                 )
+                                                 ],
                                                 style={"fontSize": "14px"}),
-                                        html.H6(f"Max Series:",
+
+                                        html.H6([f"Max Profit Series:",
+                                                 html.Span(
+                                                     id="MaxProfitSeriesid",
+                                                     children="profitSer",
+                                                     style={
+                                                         "fontWeight": "bold",
+                                                         "fontStyle": "italic",
+                                                         "color": "brown",
+                                                     },
+                                                 )
+                                                 ],
                                             style={"fontSize": "14px"}),
-                                        html.H6(f"Min Series:",
+
+                                        html.H6(f"------------------------------------------------",
+                                                style={"fontSize": "14px"}),
+
+                                        html.H6([f"Max Loss:",
+                                                 html.Span(
+                                                     id="MaxLossid",
+                                                     children="lossVal",
+                                                     style={
+                                                         "fontWeight": "bold",
+                                                         "fontStyle": "italic",
+                                                         "color": "brown",
+                                                     },
+                                                 )
+                                                 ],
                                             style={"fontSize": "14px"}),
-                                        html.H6(f"Max Series Portfolio:",
+
+                                        html.H6([f"Max Loss Portfolio:",
+                                                 html.Span(
+                                                     id="MaxLossPortfolioid",
+                                                     children="lossPortfolio",
+                                                     style={
+                                                         "fontWeight": "bold",
+                                                         "fontStyle": "italic",
+                                                         "color": "brown",
+                                                     },
+                                                 )
+                                                 ],
                                                 style={"fontSize": "14px"}),
-                                        html.H6(f"Min Series Portfolio:",
-                                                style={"fontSize": "14px"}),
-                                        html.H6(f"Max Series Profit:",
-                                                style={"fontSize": "14px"}),
-                                        html.H6(f"Min Series Loss:",
+
+                                        html.H6([f"Max Loss Series:",
+                                                 html.Span(
+                                                     id="MaxLossSeriesid",
+                                                     children="lossSer",
+                                                     style={
+                                                         "fontWeight": "bold",
+                                                         "fontStyle": "italic",
+                                                         "color": "brown",
+                                                     },
+                                                 )
+                                                 ],
                                                 style={"fontSize": "14px"}),
                                 ]
                             ),
@@ -1248,7 +1327,17 @@ def update_dropdowns(portfolioName, strategyName, seriesName):
 ## ----------------- callback for portfolio pie ------------------## Start
 @app.callback(
     Output("piePortfolio1", "figure"),
+
     Output("processingTimeid", "children"),
+
+    Output("MaxProfitid", "children"),
+    Output("MaxProfitPortfolioid", "children"),
+    Output("MaxProfitSeriesid", "children"),
+
+    Output("MaxLossid", "children"),
+    Output("MaxLossPortfolioid", "children"),
+    Output("MaxLossSeriesid", "children"),
+
     Input("ddPortfolio", "value"),
     Input("ddStrategy", "value"),
     Input("ddSeries", "value"),
@@ -1318,7 +1407,8 @@ def updatePortfolioPie(
     dfMaxProfit = dfFiltered.sort(by=pl.col('profitLoss')).tail(1).collect()
     print(dfMaxProfit)
 
-    lossVal = dfMaxLoss.select(pl.col('profitLoss')).to_series()[0]
+    # lossVal = dfMaxLoss.select(pl.col('profitLoss')).to_series()[0]
+    lossVal = f'{dfMaxLoss["profitLoss"][0]:.2f}'
     lossPortfolio = dfMaxLoss.select(pl.col('Portfolio')).to_series()[0]
     lossSer = dfMaxLoss.select(pl.col('SERIES')).to_series()[0]
 
@@ -1326,7 +1416,8 @@ def updatePortfolioPie(
     print(lossSer)
     print(lossPortfolio)
 
-    profitVal = dfMaxProfit.select(pl.col('profitLoss')).to_series()[0]
+    # profitVal = round( dfMaxProfit.select(pl.col('profitLoss')).to_series()[0], 2)
+    profitVal = f'{dfMaxProfit["profitLoss"][0]:.2f}'
     profitPortfolio = dfMaxProfit.select(pl.col('Portfolio')).to_series()[0]
     profitSer = dfMaxProfit.select(pl.col('SERIES')).to_series()[0]
     print(profitVal)
@@ -1336,7 +1427,7 @@ def updatePortfolioPie(
 
 
 
-    return fig, processingTime
+    return fig, processingTime, profitVal, profitPortfolio, profitSer, lossVal, lossPortfolio, lossSer
 ## ----------------- callback for portfolio pie ------------------## End
 
 ## ------------------ callback for strategy pie chart -----------------## Start
