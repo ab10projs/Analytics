@@ -201,32 +201,30 @@ txtTechnicalChallenges =  dbc.Container([
     dbc.Tooltip(
         html.Div(
     [
-        html.B("Common Issues", style={"fontSize": "14px"}),
+        html.B("Common Issues", style={"fontSize": "14px", "color": "red",}),
         html.Hr(style={"margin": "4px 0"}),
         html.Ul(
             [
                 html.Div("1. Slow response"),
-                html.Div("2. Drill-down and drill-through are slow"),
+                html.Div("2. Slow Drill-down"),
                 html.Div("3. Filters freeze"),
-                html.Div("4. Reports time out"),
-                html.Div("5. Business calculations become difficult"),
-                html.Div("6.Performance degrades quickly"),
-                html.Div("7. Lacks flexibility"),
-                html.Div("8. Limited custom algorithms"),
-                html.Div("9. Cost escalation"),
-                html.Div("10. Limited interactivity"),
+                html.Div("5. Reports timeout"),
+                html.Div("6. Slow turnaround"),
+                html.Div("7. Cost escalation"),
+                html.Div("8. Less interactivity"),
             ],
             style={
                 "paddingLeft": "18px",
                 "margin": "5",
-                "fontSize": "14px",
+                "fontSize": "18px",
                 "lineHeight": "1.3",
+                "color": "red",
             },
         ),
             ],
             style={"text-align": "left", "width": "100%"}
         ),
-        "Black text on a white background with no borders!",
+
         target="tipTechnicalChallenges",
         placement="bottom",
         # This style block overrides Bootstrap 5 CSS variables directly
@@ -263,8 +261,9 @@ txtSolutionArchitecture =  dbc.Container([
             style={
                 "paddingLeft": "18px",
                 "margin": "5",
-                "fontSize": "14px",
+                "fontSize": "18px",
                 "lineHeight": "1.3",
+                "color": "blue",
             },
         ),
             ],
