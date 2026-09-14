@@ -347,7 +347,7 @@ app.index_string = '''
 
            Rows:
 
-               55% | 45%
+               45% | 55%
 
            Total height:
 
@@ -366,8 +366,8 @@ app.index_string = '''
 
             grid-template-rows:
 
-                55%
-                45%;
+                45%
+                55%;
 
             width: 100vw;
 
@@ -1101,7 +1101,19 @@ app.layout = html.Div(
                                              layout=dict(
                                                  paper_bgcolor="white",
                                                  plot_bgcolor="white",
-                                                 margin=dict(l=10, r=10, t=10, b=10),
+                                                 margin=dict(l=0, r=0, t=0, b=0),
+                                                 showlegend=False,
+                                                 xaxis=dict(
+                                                     title=None,
+                                                     showgrid=False,
+                                                     zeroline=False,
+                                                 ),
+
+                                                 yaxis=dict(
+                                                     title=None,
+                                                     showgrid=False,
+                                                     zeroline=False,
+                                                 ),
                                              )
                                          ),
 
@@ -1605,8 +1617,8 @@ def updateScatter(
     # Create your scatter here
     # #############  3 d Scatter ############# Start
 
-    dfPortStraSer = dfPortStrSer.filter([(pl.col('pl')<15000)
-                                          & (pl.col('pl')>-15000)])
+    dfPortStraSer = dfPortStrSer.filter([(pl.col('pl')<5000)
+                                          & (pl.col('pl')>-5000)])
     portfolios = dfPortStraSer["Portfolio"].unique().to_list()
     portfolio_map = {
         portfolio: i
@@ -1751,7 +1763,7 @@ def update_multiline(clickData):
                 x=df_symbol["DATE1"].to_list(),
                 y=df_symbol["profitLoss"].to_list(),
                 mode="markers",
-                name= "",
+                # name= "",
                 marker = dict(
                     opacity=.8,
                     size = 2,
@@ -1780,8 +1792,8 @@ def update_multiline(clickData):
         margin=dict(
             l=40,
             r=20,
-            t=50,
-            b=40
+            t=0,
+            b=0
         ),
 
         hovermode="x unified"
