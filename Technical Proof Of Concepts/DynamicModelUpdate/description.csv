@@ -1,0 +1,36 @@
+Description
+"
+
+# **Data Description for Concrete Strength Dataset**
+
+## **Objective**
+The dataset aims to predict the **Concrete Strength** based on various material compositions and curing age.
+
+## **Features and Descriptions**
+| Column Name             | Data Type | Description |
+|-------------------------|----------|-------------|
+| **Cement**              | float    | Amount of cement in kg/m³ used in the concrete mix. |
+| **Blast_Furnance_Slag** | float    | Amount of blast furnace slag (a by-product of steel production) in kg/m³. |
+| **Fly_Ash**             | float    | Amount of fly ash (a by-product of coal combustion) in kg/m³. |
+| **Water**               | float    | Amount of water in kg/m³ used in the mix. |
+| **Superplasticizer**    | float    | Amount of superplasticizer (chemical admixture to improve workability) in kg/m³. |
+| **Coarse_Aggregate**    | float    | Amount of coarse aggregate (gravel/stones) in kg/m³. |
+| **Fine_Aggregate**      | float    | Amount of fine aggregate (sand) in kg/m³. |
+| **Age_Day**             | int      | Age of concrete in **days** (time for curing). |
+| **Concrete_Strength**   | float    | **Target Variable** – Compressive strength of concrete in MPa. |
+
+---
+
+## **Dataset Characteristics**
+- The dataset includes various combinations of **cementitious materials, aggregates, water, and admixtures** to evaluate their effect on concrete strength.
+- **Concrete Strength** depends on the mix composition and curing age.
+- The dataset contains continuous numerical values.
+
+---
+
+## **Use Cases**
+- **Regression Analysis**: Predict **Concrete Strength** based on mix proportions.
+- **Optimization**: Identify the best mix for maximum strength.
+- **Quality Control**: Ensure mix design meets strength requirements.
+
+    "
