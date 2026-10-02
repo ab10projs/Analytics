@@ -24,4 +24,4 @@ for a,b in enumerate(groups, start=0):
     dfJson = b.write_json()
     r.xadd(stream_name,{'date':str(b['DATE1'][0]),'data':dfJson})
     print('Published Batch for date:', b['DATE1'][0])
-    time.sleep(.7)
+    time.sleep(.5)
