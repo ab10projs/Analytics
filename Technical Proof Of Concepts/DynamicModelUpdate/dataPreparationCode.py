@@ -1,4 +1,4 @@
-#####  create dummy equation and generate data  #########
+##### generate data  #########
 import pandas as pd
 import numpy as np
 import polars as pl
@@ -63,6 +63,21 @@ Regular monitoring is needed as the relative humidity and temperature keeps chan
 generated whenever due to temperature and humidity the rpm and rpmSec needs to be adjusted     
 ------------------- Design of Experient ----------------------
 
+------------------- Approach ---------------------------
+1) save the prepared data (40 rows), only variable columns and actual strength and not calculated.
+2) use statics model and fit the data to find the estimation equation
+3) publish the statistics and relation -- (store in json)
+4) use AI to explain the impact of variables. -- (store in json)
+5) from mean and sd, publish the strength that can be expected at 5% significance OR 95% confidence level  -- (store in json)
+6) generate next 10 rows and consider it as sample
+7) calculate standard error, and z score to confirm if the sample of 10 and initial sample of 30 have
+significant difference  -- (store in json)
+8) If the difference is significant, alert is raised and a commentary from AI is shown to suggest what
+process changes in mix, rpm rpmSec should be done. -- (store in json)
+9) generate new samples after altering process (rpm,mix, rpmSec) and perform hypothesis testing
+10) Ask agent recommendations for optimization on rpm, rpmSec and the ingradiant
+
+------------------- Approach ---------------------------
 """
 
 ###  About data  --- end
@@ -71,16 +86,6 @@ pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
 pd.set_option('display.width', None)
 pd.set_option('display.max_colwidth', None)
-
-
-# ### random data generation -- start
-# import random
-# x = 10
-# low = 1.5
-# high = 10.5
-# lst = [round( random.uniform(low, high),4) for _ in range(x)]
-# print(lst)
-# ### random data generation -- end
 
 ## random data generation
 import random
@@ -94,10 +99,6 @@ rpm = [round( random.uniform(800, 1400),3) for _ in range(dataCount)]
 rpmSec = [round( random.uniform(600, 800),3) for _ in range(dataCount)]
 actualFactor = [round( random.uniform(.70, 1.30),3) for _ in range(dataCount)]
 
-print(factor)
-print(coreGlu)
-print(binder1)
-##
 
 df = pd.DataFrame( {'coreGlu': coreGlu, 'binder1':binder1 , 'relHum':relHum, 'tempr':tempr,
                     'rpm':rpm, 'rpmSec':rpmSec, 'actualFactor': actualFactor})
@@ -119,10 +120,7 @@ df['calctempr']= df['tempr'].apply(
 )
 
 df['calcrpm']= df['rpm'].apply(
-# lambda x: (
-#     (120 - 0.0025 * (x - 1000)**2)/100 if x <= 100
-#     else (120 - 0.000375 * (x - 1000)**2)/100
-# )
+
 lambda x: (
     (120 - 0.0025 * (x - 1000)**2)/100 if x <= 100
     else (120 - 0.00375 * (x - 1000)**2)/100
@@ -131,16 +129,8 @@ lambda x: (
 
 )
 
-
 df['calcrpmSec']= df['rpmSec'].apply(
-# lambda x: (
-#     (40 + 360 * (
-#         3 * ((x - 600) / 100)**2
-#         - 2 * ((x - 600) / 100)**3
-#     ))/500 if x <= 700
-#     else (400 + 0.4 * (x - 700)
-#          - 0.002 * (x - 700)**2)/500
-# )
+
 lambda x: (
     (40 + 360 * (
         3 * ((x - 600) / 100)**2
@@ -150,70 +140,73 @@ lambda x: (
          - 0.02 * (x - 700)**2)/500
 )
 
-
 )
 
-df['estimate'] = df['calccoreGlu']+df['calcbinder1']+df['calcrelHum']+df['calctempr']+df['calcrpm']+df['calcrpmSec']
+df['estimate'] = (df['calccoreGlu'] *0.5)+(df['calcbinder1']*1.2)+(df['calcrelHum']*1)+df['calctempr']+(df['calcrpm']*.07)+df['calcrpmSec']
 
 df['actualStrength'] = df['estimate'] *df['actualFactor']
 
 print(df.head(600))
+dfpolar= pl.DataFrame(df)
+# df.to_csv("C:/GIT_Repo_Analytics/Analytics/Technical Proof Of Concepts/DynamicModelUpdate/dataPrep.csv")
+dfpolar.write_csv("C:/GIT_Repo_Analytics/Analytics/Technical Proof Of Concepts/DynamicModelUpdate/dataPrep.csv")
 
 
-
-fig1 = px.scatter(
-    df,
-    x=df['coreGlu'],
-    y=df['calccoreGlu'],
-    title="calccoreGlu",
-    labels={"value": "Values", "variable": "Metric", "ser": "Ser"},
-)
-fig1.show()
-
-fig2 = px.scatter(
-    df,
-    x=df['binder1'],
-    y=df['calcbinder1'],
-    title="calcbinder1",
-    labels={"value": "Values", "variable": "Metric", "ser": "Ser"},
-)
-fig2.show()
-
-fig3 = px.scatter(
-    df,
-    x=df['relHum'],
-    y=df['calcrelHum'],
-    title="calcrelHum",
-    labels={"value": "Values", "variable": "Metric", "ser": "Ser"},
-)
-fig3.show()
-
-fig4 = px.scatter(
-    df,
-    x=df['tempr'],
-    y=df['calctempr'],
-    title="calctempr",
-    labels={"value": "Values", "variable": "Metric", "ser": "Ser"},
-)
-fig4.show()
-
-fig5 = px.scatter(
-    df,
-    x=df['rpm'],
-    y=df['calcrpm'],
-    title="calcrpm",
-    labels={"value": "Values", "variable": "Metric", "ser": "Ser"},
-)
-fig5.show()
-
-fig6 = px.scatter(
-    df,
-    x=df['rpmSec'],
-    y=df['calcrpmSec'],
-    title="calcrpmSec",
-    labels={"value": "Values", "variable": "Metric", "ser": "Ser"},
-)
-fig6.show()
+# ##################  individual figures for sanity check ####################
+# fig1 = px.scatter(
+#     df,
+#     x=df['coreGlu'],
+#     y=df['calccoreGlu'],
+#     title="calccoreGlu",
+#     labels={"value": "Values", "variable": "Metric", "ser": "Ser"},
+# )
+# fig1.show()
+#
+# fig2 = px.scatter(
+#     df,
+#     x=df['binder1'],
+#     y=df['calcbinder1'],
+#     title="calcbinder1",
+#     labels={"value": "Values", "variable": "Metric", "ser": "Ser"},
+# )
+# fig2.show()
+#
+# fig3 = px.scatter(
+#     df,
+#     x=df['relHum'],
+#     y=df['calcrelHum'],
+#     title="calcrelHum",
+#     labels={"value": "Values", "variable": "Metric", "ser": "Ser"},
+# )
+# fig3.show()
+#
+# fig4 = px.scatter(
+#     df,
+#     x=df['tempr'],
+#     y=df['calctempr'],
+#     title="calctempr",
+#     labels={"value": "Values", "variable": "Metric", "ser": "Ser"},
+# )
+# fig4.show()
+#
+# fig5 = px.scatter(
+#     df,
+#     x=df['rpm'],
+#     y=df['calcrpm'],
+#     title="calcrpm",
+#     labels={"value": "Values", "variable": "Metric", "ser": "Ser"},
+# )
+# fig5.show()
+#
+# fig6 = px.scatter(
+#     df,
+#     x=df['rpmSec'],
+#     y=df['calcrpmSec'],
+#     title="calcrpmSec",
+#     labels={"value": "Values", "variable": "Metric", "ser": "Ser"},
+# )
+# fig6.show()
+# ##################  individual figures for sanity check ####################
 
 #################------------------------------------------------------------------
 # ## equation
