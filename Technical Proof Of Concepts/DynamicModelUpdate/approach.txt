@@ -1,0 +1,9 @@
+1) Data row is plotted
+2) Show random pattern
+3) Generate regeq
+4) generate summary and explain meaning
+5) How new data comes and accuracy is impacted
+6) Alert on a threshold value
+7) New model is generated 
+8) new equation and summary and comparison
+9) Summary recommendations

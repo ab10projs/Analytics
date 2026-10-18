@@ -20,19 +20,20 @@ y_col = 'Strg'
 pdf = dfTrng1.select(x_cols + [y_col]).to_pandas()
 
 
-
 X = pdf[x_cols]
 y = pdf[y_col]
 
+
 X_with_constant = sm.add_constant(X)
-# print("  X_with_constant ")
-# print(X_with_constant)
+print("  X_with_constant ")
+print(X_with_constant)
 # print(y)
 
 model = sm.OLS(y, X_with_constant).fit()
 
 const = model.params["const"]
-# print(const)
+print("const")
+print(const)
 
 # slopes = [model.params[x_cols]]
 slopes = model.params[x_cols]
@@ -71,7 +72,7 @@ equation = create_equation(
     y_name="DependentVariable"
 )
 
-# print(equation)
+print(equation)
 
 
 def calculate_y(row, model, x_cols):
@@ -87,6 +88,9 @@ def calculate_y(row, model, x_cols):
 
 
 pdf = pl.read_csv("css.csv", infer_schema_length=500).select(x_cols + [y_col]).to_pandas() # ****************************
+
+print("model",model)
+print("x_cols", x_cols)
 
 pdf["predicted_y"] = pdf.apply(
     lambda row: calculate_y(row, model, x_cols),

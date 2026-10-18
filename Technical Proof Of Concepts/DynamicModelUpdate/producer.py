@@ -5,7 +5,7 @@ from collections import deque
 import datetime
 import time
 
-df = pl.read_csv("C://GIT_Repo_Analytics//Analytics//Technical Proof Of Concepts//DynamicModelUpdate//css.csv",
+df = pl.read_csv("C://GIT_Repo_Analytics//Analytics//Technical Proof Of Concepts//DynamicModelUpdate//BaseData.csv",
                  infer_schema_length= 600)
 
 stream_name = "prediction_model_data"
@@ -17,12 +17,12 @@ r = redis.Redis(
 
 
 
-groups = df.partition_by("Serl", maintain_order=True)
+groups = df.partition_by("pressure", maintain_order=True)
 
 # print(groups[2])
 
 for a,b in enumerate(groups, start=0):
     dfJson = b.write_json()
-    r.xadd(stream_name,{'date':str(b['Serl'][0]),'data':dfJson})
-    print('Published Batch for Serl:', b['Serl'][0])
-    time.sleep(2)
+    r.xadd(stream_name,{'date':str(b['pressure'][0]),'data':dfJson})
+    print('Published Batch for pressure:', b['pressure'][0])
+    time.sleep(1)
