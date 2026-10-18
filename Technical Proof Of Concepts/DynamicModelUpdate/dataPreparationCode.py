@@ -34,6 +34,35 @@ becomes very expensive.
 5) rpm      : range (800 - 1400)      -- impact (increase, then dip slow)
 6) rpmSec   : range (600 - 800)       -- impact (increase, then dip flat)
 7) pressure kg/sqinc: (3.45 - 6.6)    -- (acceptable 5.2 onwards)
+
+--------------------
+The factors that can not be controlled are as below:
+1) relHum : Relative Humidity is natural
+2) tempr  : Temperature is natural
+3) coreGlue : The raw material is supplied by vendors and can not be guaranteed to be of same 
+composition resulting in same strength
+4) binder1 :  The raw material is supplied by vendors and can not be guaranteed to be of same 
+composition resulting in same strength
+-------------------
+
+-------------------
+Factors that can be controlled
+1) rpm: The machine's rpm can be controlled
+2) rpmSec : machine running at a certain rpm for desired seconds can be controlled 
+3) coreGlue and binder1 ratio: The ration in which the two ingradient can be mixed can be controlled   
+-------------------
+
+------------------- Design of Experient ----------------------
+Once a lot of coreGlue and binder material is received, there is no guarantee that the old mixture ratio will
+produce same strength. The other variable factors like relative humidity and temperature also has impact on
+strength, which are out of control.
+Before deciding the mix and processing (ratio, rpm etc.) samples are taken and strength is checked 
+
+
+Regular monitoring is needed as the relative humidity and temperature keeps changing. Alert needs to be 
+generated whenever due to temperature and humidity the rpm and rpmSec needs to be adjusted     
+------------------- Design of Experient ----------------------
+
 """
 
 ###  About data  --- end
@@ -63,7 +92,7 @@ relHum = [round( random.uniform(40, 60),3) for _ in range(dataCount)]
 tempr = [round( random.uniform(-100, -50),3) for _ in range(dataCount)]
 rpm = [round( random.uniform(800, 1400),3) for _ in range(dataCount)]
 rpmSec = [round( random.uniform(600, 800),3) for _ in range(dataCount)]
-actualFactor = [round( random.uniform(.88, 1.15),3) for _ in range(dataCount)]
+actualFactor = [round( random.uniform(.70, 1.30),3) for _ in range(dataCount)]
 
 print(factor)
 print(coreGlu)
@@ -74,13 +103,11 @@ df = pd.DataFrame( {'coreGlu': coreGlu, 'binder1':binder1 , 'relHum':relHum, 'te
                     'rpm':rpm, 'rpmSec':rpmSec, 'actualFactor': actualFactor})
 
 df['calccoreGlu']= df['coreGlu'].apply(
-    # lambda row: (-(row-90)**2 +560 -row**1.1 )/75
-    lambda row: (-(row-90)**2 +560 -row**1.1 )/100
+    lambda row: (-(row-90)**2 +560 -row**1.1 )/75
 )
 
 df['calcbinder1']= df['binder1'].apply(
-# lambda x, M=100: 0 if x <= 0 else (M*(3*(x/12)**2 - 2*(x/12)**3))/75 if x < 12 else M/100
-    lambda x, M=100: 0 if x <= 0 else (M*(3*(x/12)**2 - 2*(x/12)**3))/100 if x < 12 else M/150
+    lambda x, M=100: (M*(3*(x/12)**2 - 2*(x/12)**3))/100
 )
 
 df['calcrelHum']= df['relHum'].apply(
@@ -93,13 +120,12 @@ df['calctempr']= df['tempr'].apply(
 
 df['calcrpm']= df['rpm'].apply(
 # lambda x: (
-#     (120 - 0.0025 * (x - 1000)**2)/100 if x <= 1000
+#     (120 - 0.0025 * (x - 1000)**2)/100 if x <= 100
 #     else (120 - 0.000375 * (x - 1000)**2)/100
 # )
-
 lambda x: (
-    (120 - 0.0025 * (x - 1000)**2)/50 if x <= 1000
-    else (120 - 0.000375 * (x - 1000)**2)/50
+    (120 - 0.0025 * (x - 1000)**2)/100 if x <= 100
+    else (120 - 0.00375 * (x - 1000)**2)/100
 )
 
 
@@ -107,37 +133,87 @@ lambda x: (
 
 
 df['calcrpmSec']= df['rpmSec'].apply(
+# lambda x: (
+#     (40 + 360 * (
+#         3 * ((x - 600) / 100)**2
+#         - 2 * ((x - 600) / 100)**3
+#     ))/500 if x <= 700
+#     else (400 + 0.4 * (x - 700)
+#          - 0.002 * (x - 700)**2)/500
+# )
 lambda x: (
     (40 + 360 * (
         3 * ((x - 600) / 100)**2
         - 2 * ((x - 600) / 100)**3
     ))/500 if x <= 700
     else (400 + 0.4 * (x - 700)
-         - 0.002 * (x - 700)**2)/500
+         - 0.02 * (x - 700)**2)/500
 )
+
+
 )
 
 df['estimate'] = df['calccoreGlu']+df['calcbinder1']+df['calcrelHum']+df['calctempr']+df['calcrpm']+df['calcrpmSec']
 
 df['actualStrength'] = df['estimate'] *df['actualFactor']
 
-print(df.head(300))
+print(df.head(600))
 
 
 
-fig = px.scatter(
+fig1 = px.scatter(
+    df,
+    x=df['coreGlu'],
+    y=df['calccoreGlu'],
+    title="calccoreGlu",
+    labels={"value": "Values", "variable": "Metric", "ser": "Ser"},
+)
+fig1.show()
+
+fig2 = px.scatter(
+    df,
+    x=df['binder1'],
+    y=df['calcbinder1'],
+    title="calcbinder1",
+    labels={"value": "Values", "variable": "Metric", "ser": "Ser"},
+)
+fig2.show()
+
+fig3 = px.scatter(
+    df,
+    x=df['relHum'],
+    y=df['calcrelHum'],
+    title="calcrelHum",
+    labels={"value": "Values", "variable": "Metric", "ser": "Ser"},
+)
+fig3.show()
+
+fig4 = px.scatter(
+    df,
+    x=df['tempr'],
+    y=df['calctempr'],
+    title="calctempr",
+    labels={"value": "Values", "variable": "Metric", "ser": "Ser"},
+)
+fig4.show()
+
+fig5 = px.scatter(
+    df,
+    x=df['rpm'],
+    y=df['calcrpm'],
+    title="calcrpm",
+    labels={"value": "Values", "variable": "Metric", "ser": "Ser"},
+)
+fig5.show()
+
+fig6 = px.scatter(
     df,
     x=df['rpmSec'],
     y=df['calcrpmSec'],
     title="calcrpmSec",
     labels={"value": "Values", "variable": "Metric", "ser": "Ser"},
 )
-
-
-# This will open a new tab in your default web browser
-fig.show()
-
-
+fig6.show()
 
 #################------------------------------------------------------------------
 # ## equation
