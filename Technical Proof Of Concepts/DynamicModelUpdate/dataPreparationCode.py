@@ -97,18 +97,22 @@ relHum = [round( random.uniform(40, 60),3) for _ in range(dataCount)]
 tempr = [round( random.uniform(-100, -50),3) for _ in range(dataCount)]
 rpm = [round( random.uniform(800, 1400),3) for _ in range(dataCount)]
 rpmSec = [round( random.uniform(600, 800),3) for _ in range(dataCount)]
-actualFactor = [round( random.uniform(.70, 1.30),3) for _ in range(dataCount)]
+actualFactor = [round( random.uniform(.88, 1.12),3) for _ in range(dataCount)]
 
 
 df = pd.DataFrame( {'coreGlu': coreGlu, 'binder1':binder1 , 'relHum':relHum, 'tempr':tempr,
                     'rpm':rpm, 'rpmSec':rpmSec, 'actualFactor': actualFactor})
 
+
 df['calccoreGlu']= df['coreGlu'].apply(
-    lambda row: (-(row-90)**2 +560 -row**1.1 )/75
+    # lambda row: ((-(row-90)**2 +560 -row**1.1 )/75)*0.5
+    lambda row: ((-(row-90)**2  -row**1.1 )/75)*0.5
+    # lambda row: (-(row-90)**2 +660 -row**1.1 )/55
 )
 
 df['calcbinder1']= df['binder1'].apply(
-    lambda x, M=100: (M*(3*(x/12)**2 - 2*(x/12)**3))/100
+    lambda x, M=100: ((M*(3*(x/12)**2 - 2*(x/12)**3))/100)*1.2
+    # lambda x, M=100: (M*(3*(x/12)**2 - 2*(x/12)**3))/70
 )
 
 df['calcrelHum']= df['relHum'].apply(
@@ -122,8 +126,8 @@ df['calctempr']= df['tempr'].apply(
 df['calcrpm']= df['rpm'].apply(
 
 lambda x: (
-    (120 - 0.0025 * (x - 1000)**2)/100 if x <= 100
-    else (120 - 0.00375 * (x - 1000)**2)/100
+    ((120 - 0.0025 * (x - 1000)**2)/100)*.07 if x <= 100
+    else ((120 - 0.00375 * (x - 1000)**2)/100)*.07
 )
 
 
@@ -142,73 +146,75 @@ lambda x: (
 
 )
 
-df['estimate'] = (df['calccoreGlu'] *0.5)+(df['calcbinder1']*1.2)+(df['calcrelHum']*1)+df['calctempr']+(df['calcrpm']*.07)+df['calcrpmSec']
+df['est_strength'] = +280 +(df['calccoreGlu'] )+(df['calcbinder1'])+(df['calcrelHum'])+df['calctempr']+(df['calcrpm'])+df['calcrpmSec']
 
-df['actualStrength'] = df['estimate'] *df['actualFactor']
+df['strength'] = df['est_strength'] *df['actualFactor']
 
 print(df.head(600))
 dfpolar= pl.DataFrame(df)
 # df.to_csv("C:/GIT_Repo_Analytics/Analytics/Technical Proof Of Concepts/DynamicModelUpdate/dataPrep.csv")
-dfpolar.write_csv("C:/GIT_Repo_Analytics/Analytics/Technical Proof Of Concepts/DynamicModelUpdate/dataPrep.csv")
+dfpolar.select(pl.col(['coreGlu','binder1','relHum','tempr','rpm','rpmSec','strength'])
+               ).write_csv("C:/GIT_Repo_Analytics/Analytics/Technical Proof Of Concepts/DynamicModelUpdate/inputdata.csv"
+                           )
 
 
-# ##################  individual figures for sanity check ####################
-# fig1 = px.scatter(
-#     df,
-#     x=df['coreGlu'],
-#     y=df['calccoreGlu'],
-#     title="calccoreGlu",
-#     labels={"value": "Values", "variable": "Metric", "ser": "Ser"},
-# )
-# fig1.show()
-#
-# fig2 = px.scatter(
-#     df,
-#     x=df['binder1'],
-#     y=df['calcbinder1'],
-#     title="calcbinder1",
-#     labels={"value": "Values", "variable": "Metric", "ser": "Ser"},
-# )
-# fig2.show()
-#
-# fig3 = px.scatter(
-#     df,
-#     x=df['relHum'],
-#     y=df['calcrelHum'],
-#     title="calcrelHum",
-#     labels={"value": "Values", "variable": "Metric", "ser": "Ser"},
-# )
-# fig3.show()
-#
-# fig4 = px.scatter(
-#     df,
-#     x=df['tempr'],
-#     y=df['calctempr'],
-#     title="calctempr",
-#     labels={"value": "Values", "variable": "Metric", "ser": "Ser"},
-# )
-# fig4.show()
-#
-# fig5 = px.scatter(
-#     df,
-#     x=df['rpm'],
-#     y=df['calcrpm'],
-#     title="calcrpm",
-#     labels={"value": "Values", "variable": "Metric", "ser": "Ser"},
-# )
-# fig5.show()
-#
-# fig6 = px.scatter(
-#     df,
-#     x=df['rpmSec'],
-#     y=df['calcrpmSec'],
-#     title="calcrpmSec",
-#     labels={"value": "Values", "variable": "Metric", "ser": "Ser"},
-# )
-# fig6.show()
-# ##################  individual figures for sanity check ####################
+##################  individual figures for sanity check ####################
+fig1 = px.scatter(
+    df,
+    x=df['coreGlu'],
+    y=df['calccoreGlu'],
+    title="calccoreGlu",
+    labels={"value": "Values", "variable": "Metric", "ser": "Ser"},
+)
+fig1.show()
 
-#################------------------------------------------------------------------
+fig2 = px.scatter(
+    df,
+    x=df['binder1'],
+    y=df['calcbinder1'],
+    title="calcbinder1",
+    labels={"value": "Values", "variable": "Metric", "ser": "Ser"},
+)
+fig2.show()
+
+fig3 = px.scatter(
+    df,
+    x=df['relHum'],
+    y=df['calcrelHum'],
+    title="calcrelHum",
+    labels={"value": "Values", "variable": "Metric", "ser": "Ser"},
+)
+fig3.show()
+
+fig4 = px.scatter(
+    df,
+    x=df['tempr'],
+    y=df['calctempr'],
+    title="calctempr",
+    labels={"value": "Values", "variable": "Metric", "ser": "Ser"},
+)
+fig4.show()
+
+fig5 = px.scatter(
+    df,
+    x=df['rpm'],
+    y=df['calcrpm'],
+    title="calcrpm",
+    labels={"value": "Values", "variable": "Metric", "ser": "Ser"},
+)
+fig5.show()
+
+fig6 = px.scatter(
+    df,
+    x=df['rpmSec'],
+    y=df['calcrpmSec'],
+    title="calcrpmSec",
+    labels={"value": "Values", "variable": "Metric", "ser": "Ser"},
+)
+fig6.show()
+##################  individual figures for sanity check ####################
+
+################------------------------------------------------------------------
 # ## equation
 # df = pl.read_csv("BaseData.csv")
 # names = df.columns
@@ -216,3 +222,37 @@ dfpolar.write_csv("C:/GIT_Repo_Analytics/Analytics/Technical Proof Of Concepts/D
 # pressure = f"54 + pow({names[0]},1.67) + 2* pow({names[1]},1.22) - pow({names[2]},0.88) \
 #  - pow(({names[3]}/{names[4]}),.77) + 1.33* ({names[5]}/{names[6]})"
 # print(pressure)
+
+###################################  Linear and Exp separate ################################
+
+# df = df.to_pandas()
+print(df.head(10))
+
+
+df['exponential_coreGlu'] = df['coreGlu'].apply(
+    lambda row: (((row-100)**2)/75)*0.5
+)
+
+df['linear_coreGlu'] = df['coreGlu'].apply(
+    lambda row: ((row)/75)*0.5
+)
+
+# Combined result
+df['combineLinExpGlu'] = (
+    df['linear_coreGlu'] + df['exponential_coreGlu']
+)
+print("-----####  Linear and Exp separate ####--------")
+print(df.head(20))
+
+df.to_csv("C:/GIT_Repo_Analytics/Analytics/Technical Proof Of Concepts/DynamicModelUpdate/ExpLinCodeGlue.csv")
+# #-----------------------------------#
+print("------------ Linear and Exp separate fig --------------------  ")
+
+figLinExp = px.scatter(
+    df,
+    x=df['coreGlu'],
+    y=[df['linear_coreGlu'],df['exponential_coreGlu'], df['combineLinExpGlu'] ],
+    title="figLinExp",
+    labels={"value": "Values", "variable": "Metric", "ser": "Ser"},
+)
+figLinExp.show()
