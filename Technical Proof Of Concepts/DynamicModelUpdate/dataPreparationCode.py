@@ -158,61 +158,61 @@ dfpolar.select(pl.col(['coreGlu','binder1','relHum','tempr','rpm','rpmSec','stre
                            )
 
 
-##################  individual figures for sanity check ####################
-fig1 = px.scatter(
-    df,
-    x=df['coreGlu'],
-    y=df['calccoreGlu'],
-    title="calccoreGlu",
-    labels={"value": "Values", "variable": "Metric", "ser": "Ser"},
-)
-fig1.show()
-
-fig2 = px.scatter(
-    df,
-    x=df['binder1'],
-    y=df['calcbinder1'],
-    title="calcbinder1",
-    labels={"value": "Values", "variable": "Metric", "ser": "Ser"},
-)
-fig2.show()
-
-fig3 = px.scatter(
-    df,
-    x=df['relHum'],
-    y=df['calcrelHum'],
-    title="calcrelHum",
-    labels={"value": "Values", "variable": "Metric", "ser": "Ser"},
-)
-fig3.show()
-
-fig4 = px.scatter(
-    df,
-    x=df['tempr'],
-    y=df['calctempr'],
-    title="calctempr",
-    labels={"value": "Values", "variable": "Metric", "ser": "Ser"},
-)
-fig4.show()
-
-fig5 = px.scatter(
-    df,
-    x=df['rpm'],
-    y=df['calcrpm'],
-    title="calcrpm",
-    labels={"value": "Values", "variable": "Metric", "ser": "Ser"},
-)
-fig5.show()
-
-fig6 = px.scatter(
-    df,
-    x=df['rpmSec'],
-    y=df['calcrpmSec'],
-    title="calcrpmSec",
-    labels={"value": "Values", "variable": "Metric", "ser": "Ser"},
-)
-fig6.show()
-##################  individual figures for sanity check ####################
+# ##################  individual figures for sanity check ####################
+# fig1 = px.scatter(
+#     df,
+#     x=df['coreGlu'],
+#     y=df['calccoreGlu'],
+#     title="calccoreGlu",
+#     labels={"value": "Values", "variable": "Metric", "ser": "Ser"},
+# )
+# fig1.show()
+#
+# fig2 = px.scatter(
+#     df,
+#     x=df['binder1'],
+#     y=df['calcbinder1'],
+#     title="calcbinder1",
+#     labels={"value": "Values", "variable": "Metric", "ser": "Ser"},
+# )
+# fig2.show()
+#
+# fig3 = px.scatter(
+#     df,
+#     x=df['relHum'],
+#     y=df['calcrelHum'],
+#     title="calcrelHum",
+#     labels={"value": "Values", "variable": "Metric", "ser": "Ser"},
+# )
+# fig3.show()
+#
+# fig4 = px.scatter(
+#     df,
+#     x=df['tempr'],
+#     y=df['calctempr'],
+#     title="calctempr",
+#     labels={"value": "Values", "variable": "Metric", "ser": "Ser"},
+# )
+# fig4.show()
+#
+# fig5 = px.scatter(
+#     df,
+#     x=df['rpm'],
+#     y=df['calcrpm'],
+#     title="calcrpm",
+#     labels={"value": "Values", "variable": "Metric", "ser": "Ser"},
+# )
+# fig5.show()
+#
+# fig6 = px.scatter(
+#     df,
+#     x=df['rpmSec'],
+#     y=df['calcrpmSec'],
+#     title="calcrpmSec",
+#     labels={"value": "Values", "variable": "Metric", "ser": "Ser"},
+# )
+# fig6.show()
+# ##################  individual figures for sanity check ####################
 
 ################------------------------------------------------------------------
 # ## equation
@@ -246,12 +246,39 @@ print(df.head(20))
 
 df.to_csv("C:/GIT_Repo_Analytics/Analytics/Technical Proof Of Concepts/DynamicModelUpdate/ExpLinCodeGlue.csv")
 # #-----------------------------------#
-print("------------ Linear and Exp separate fig --------------------  ")
+
+# ((-(row-90)**2  -row**1.1 )/75)*0.5
+
+design = pd.DataFrame({
+    "coreGlu": df["coreGlu"],
+    "linear_coreGlu": [ (i/75)*.5 for i in  df['coreGlu']],
+    "exponential_coreGlu": [pow(abs(i-90),2.3)+100 for i in  df['coreGlu']],
+    "exponential_coreGlu1": [pow(abs(i - 86), 2.1) + 100 for i in df['coreGlu']],
+    # ((pow(df['coreGlu'].to_list()-100),1.34))
+
+})
+
+print("---------------design -------------")
+print(design.head(10))
+
+# ##---------------------------------------------------
+# print("------------ Linear and Exp separate fig --------------------  ")
+#
+# figLinExp = px.scatter(
+#     df,
+#     x=df['coreGlu'],
+#     y=[df['linear_coreGlu'],df['exponential_coreGlu'], df['combineLinExpGlu'] ],
+#     title="figLinExp",
+#     labels={"value": "Values", "variable": "Metric", "ser": "Ser"},
+# )
+# figLinExp.show()
+# ##---------------------------------------------------
+
 
 figLinExp = px.scatter(
-    df,
-    x=df['coreGlu'],
-    y=[df['linear_coreGlu'],df['exponential_coreGlu'], df['combineLinExpGlu'] ],
+    design,
+    x=design["coreGlu"],
+    y=[ design["exponential_coreGlu"], design["exponential_coreGlu1"] ],
     title="figLinExp",
     labels={"value": "Values", "variable": "Metric", "ser": "Ser"},
 )
